@@ -1,5 +1,5 @@
 /* Service worker – Firmas Drywall Enterprise (offline) */
-const CACHE = 'firmax-v6';
+const CACHE = 'firmax-v7';
 // Imprescindibles: si falla alguno, la instalación falla
 const CORE = [
  "./",
