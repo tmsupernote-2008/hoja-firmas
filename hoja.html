@@ -115,6 +115,9 @@ input[type=time]{padding:10px 8px;font-size:17px}
 .ed h4{margin:14px 0 6px;font-size:16px}
 .edRow{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);padding:8px 2px;font-size:17px}
 .edRow button{border:0;background:#fee2e2;color:#b91c1c;border-radius:8px;font-size:15px;padding:8px 12px}
+.geo{margin-top:14px;padding:12px;border:1.5px solid #9ca3af;border-radius:12px;background:#f8fafc}
+.geoSt{font-weight:700;margin:6px 0 10px}.geoSt.on{color:#166534}.geoSt.off{color:#6b7280}
+.geoBtns{display:grid;grid-template-columns:1fr;gap:8px;margin-bottom:6px}
 .edAdd{display:flex;gap:8px;margin:8px 0 4px}
 .edAdd input{flex:1;min-width:0}
 .edAdd button{flex:none;font:inherit;font-weight:700;border:2px solid var(--ink);background:#fff;border-radius:10px;padding:0 14px}
@@ -145,6 +148,12 @@ input[type=time]{padding:10px 8px;font-size:17px}
     <label class="f" for="h_task">TRABAJO / <i>TASK (Work to be done)</i></label>
     <textarea id="h_task" rows="3" placeholder="Ej.: Instalar drywall en 2do piso, área B…"></textarea>
     <div class="note">Proyecto, ubicación, preparado por, supervisor y trabajo se recuerdan en este teléfono (también al hacer “Nueva hoja”) hasta que los cambies. La fecha se pone en la de hoy al abrir.</div>
+    <div class="geo" id="geoBox">
+      <label class="f">📍 UBICACIÓN PARA FIRMAR / <i>SIGNING LOCATION</i></label>
+      <div class="geoSt" id="geoSt"></div>
+      <div class="geoBtns"><button type="button" class="btn" id="geoSet">📍 Fijar ubicación del proyecto aquí</button><button type="button" class="btn ghost" id="geoOff">Quitar restricción</button></div>
+      <div class="note">Cuando está activa, solo se puede firmar a media milla (0.5 mi, unos 800 m) o menos del punto fijado. Fíjala estando en la obra y permite el acceso a la ubicación.</div>
+    </div>
     <datalist id="dl_project"></datalist><datalist id="dl_location"></datalist><datalist id="dl_prepared"></datalist><datalist id="dl_supervisor"></datalist>
   </section>
 
@@ -513,17 +522,38 @@ window.addEventListener('resize',function(){if(!$('sigModal').classList.contains
   if(lastPadW&&r.width&&(Math.abs(r.width-lastPadW)>2||Math.abs(r.height-lastPadH)>2)){ // rescale strokes on rotation
     var sx=r.width/lastPadW,sy=r.height/lastPadH,s=Math.min(sx,sy);strokes.forEach(function(st){st.forEach(function(p){p.x*=s;p.y*=s;});});}
   lastPadW=r.width;lastPadH=r.height;sizePad();});
+/* ---------- geocerca: solo firmar a <= 0.5 milla del proyecto ---------- */
+var K_GEO='dwe_geofence_v1',GEO_M=804.672,geoLastOk=0;
+function getGeo(){var g=lsGetJ(K_GEO,null);return g&&typeof g.lat==='number'&&typeof g.lon==='number'?g:null;}
+function distM(a,b,c,d){var R=6371000,t=Math.PI/180,dl=(c-a)*t,dn=(d-b)*t,x=Math.sin(dl/2)*Math.sin(dl/2)+Math.cos(a*t)*Math.cos(c*t)*Math.sin(dn/2)*Math.sin(dn/2);return 2*R*Math.asin(Math.sqrt(x));}
+function geoStatus(){var g=getGeo(),e=$('geoSt');if(!e)return;
+  if(g){e.className='geoSt on';e.textContent='✔ Activa: solo se firma a 0.5 mi del punto fijado'+(g.when?' ('+g.when+')':'')+'.';}
+  else{e.className='geoSt off';e.textContent='Sin restricción: se puede firmar desde cualquier lugar.';}
+  $('geoOff').style.display=g?'block':'none';}
+function getPos(cb,errcb,hi){if(!navigator.geolocation){errcb({code:0});return;}navigator.geolocation.getCurrentPosition(cb,errcb,{enableHighAccuracy:hi!==false,timeout:20000,maximumAge:hi===false?0:20000});}
+function geoErr(e){return e&&e.code===1?'Permite el acceso a la ubicación del teléfono para poder firmar.':e&&e.code===3?'No se pudo obtener la ubicación a tiempo. Sal a un lugar abierto e inténtalo otra vez.':'No se pudo obtener la ubicación. Activa el GPS e inténtalo otra vez.';}
+function geoCheck(cb){var g=getGeo();if(!g){cb(true);return;}
+  toast('Verificando ubicación…');
+  getPos(function(pos){var c=pos.coords,d=distM(g.lat,g.lon,c.latitude,c.longitude),acc=Math.min(c.accuracy||0,150);
+    if(d-acc>GEO_M){var mi=(d/1609.344);toast('Estás a '+(mi<10?mi.toFixed(1):Math.round(mi))+' mi del proyecto. Solo se puede firmar a 0.5 mi o menos.');cb(false);}
+    else{geoLastOk=Date.now();cb(true);}
+  },function(e){toast(geoErr(e));cb(false);});}
+$('geoSet').onclick=function(){toast('Obteniendo ubicación…');getPos(function(pos){var c=pos.coords,dt=new Date();lsSetJ(K_GEO,{lat:c.latitude,lon:c.longitude,acc:c.accuracy||0,when:(dt.getMonth()+1)+'/'+dt.getDate()+' '+nowHM()});geoLastOk=Date.now();geoStatus();toast('Ubicación del proyecto fijada ✔');},function(e){toast(geoErr(e));});};
+$('geoOff').onclick=function(){if(!confirm('¿Quitar la restricción de ubicación? Se podrá firmar desde cualquier lugar.'))return;try{localStorage.removeItem(K_GEO);}catch(e){}geoStatus();toast('Restricción quitada');};
+geoStatus();
 var sigOut=false;
-function openSig(i,isOut){
+function openSig(i,isOut){geoCheck(function(ok){if(ok)openSigReal(i,isOut);});}
+function openSigReal(i,isOut){
   sigRow=i;sigOut=!!isOut;strokes=[];cur=null;
   var nm=state.rows[i].name;$('sigTitle').firstChild.nodeValue=(sigOut?'Firma de SALIDA #':'Firma #')+(i+1)+(nm?' – '+nm:'')+(sigOut?' / Sign out':' / Signature');
   $('sigModal').classList.add('open');document.body.style.overflow='hidden';
   requestAnimationFrame(function(){sizePad();var r=pad.getBoundingClientRect();lastPadW=r.width;lastPadH=r.height;});
 }
+var sigSaveGuard=function(){if(!getGeo()||Date.now()-geoLastOk<180000){sigSaveReal();return;}geoCheck(function(ok){if(ok)sigSaveReal();});};
 function closeSig(){$('sigModal').classList.remove('open');document.body.style.overflow='';sigRow=-1;strokes=[];}
 $('sigClear').onclick=function(){strokes=[];cur=null;redrawPad();};
 $('sigCancel').onclick=closeSig;
-$('sigSave').onclick=function(){
+var sigSaveReal=function(){
   var pts=0;strokes.forEach(function(s){pts+=s.length;});
   if(!pts){toast('Firme primero / Please sign first');return;}
   var x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;
@@ -543,6 +573,7 @@ $('sigSave').onclick=function(){
   if(!r.sub&&lastSub())r.sub=lastSub();
   var i=sigRow;var wasOut=sigOut;closeSig();renderRow(i);saveNow();toast(wasOut?'Salida firmada '+fmtTime(r.out)+' ✔':'Firma guardada ✔');
 };
+$('sigSave').onclick=sigSaveGuard;
 
 /* ---------- sheet renderer (1700x2200 = Letter @200dpi) ---------- */
 var W=1700,H=2200,FF="'SheetC','Roboto Condensed','Arial Narrow',sans-serif-condensed,Arial,sans-serif";
