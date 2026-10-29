@@ -116,8 +116,14 @@ input[type=time]{padding:10px 8px;font-size:17px}
 .edRow{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);padding:8px 2px;font-size:17px}
 .edRow button{border:0;background:#fee2e2;color:#b91c1c;border-radius:8px;font-size:15px;padding:8px 12px}
 .geo{margin-top:14px;padding:12px;border:1.5px solid #9ca3af;border-radius:12px;background:#f8fafc}
+.admBtn{font:inherit;font-size:14px;padding:8px 12px;border:1.5px solid #cbd5e1;border-radius:10px;background:#fff;color:#475569;cursor:pointer}
 .geoSt{font-weight:700;margin:6px 0 10px}.geoSt.on{color:#166534}.geoSt.off{color:#6b7280}
 .geoBtns{display:grid;grid-template-columns:1fr;gap:8px;margin-bottom:6px}
+.thumbs{display:inline-flex;gap:6px;margin-left:8px;vertical-align:middle}.thumbs img{width:34px;height:34px;object-fit:cover;border-radius:6px;border:1.5px solid #9ca3af}
+#camModal{position:fixed;inset:0;background:#000;z-index:99999;display:none}#camModal.open{display:block}
+#camVideo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
+#camCount{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font:900 150px/1 system-ui,sans-serif;color:#fff;text-shadow:0 4px 24px rgba(0,0,0,.8)}
+#camMsg{position:absolute;left:0;right:0;bottom:8%;text-align:center;color:#fff;font:700 20px system-ui,sans-serif;text-shadow:0 2px 10px #000;padding:0 16px}
 .edAdd{display:flex;gap:8px;margin:8px 0 4px}
 .edAdd input{flex:1;min-width:0}
 .edAdd button{flex:none;font:inherit;font-weight:700;border:2px solid var(--ink);background:#fff;border-radius:10px;padding:0 14px}
@@ -148,11 +154,12 @@ input[type=time]{padding:10px 8px;font-size:17px}
     <label class="f" for="h_task">TRABAJO / <i>TASK (Work to be done)</i></label>
     <textarea id="h_task" rows="3" placeholder="Ej.: Instalar drywall en 2do piso, área B…"></textarea>
     <div class="note">Proyecto, ubicación, preparado por, supervisor y trabajo se recuerdan en este teléfono (también al hacer “Nueva hoja”) hasta que los cambies. La fecha se pone en la de hoy al abrir.</div>
-    <div class="geo" id="geoBox">
+    <div style="margin-top:12px"><button type="button" class="admBtn" id="admBtn">🔒 Administrador</button></div>
+    <div class="geo" id="geoBox" style="display:none">
       <label class="f">📍 UBICACIÓN PARA FIRMAR / <i>SIGNING LOCATION</i></label>
       <div class="geoSt" id="geoSt"></div>
-      <div class="geoBtns"><button type="button" class="btn" id="geoSet">📍 Fijar ubicación del proyecto aquí</button><button type="button" class="btn ghost" id="geoOff">Quitar restricción</button></div>
-      <div class="note">Cuando está activa, solo se puede firmar a media milla (0.5 mi, unos 800 m) o menos del punto fijado. Fíjala estando en la obra y permite el acceso a la ubicación.</div>
+      <div class="geoBtns"><button type="button" class="btn" id="geoSet">📍 Fijar ubicación del proyecto aquí</button><button type="button" class="btn ghost" id="geoOff">Quitar restricción</button><button type="button" class="btn" id="geoLink">🔗 Compartir enlace de la obra</button></div>
+      <div class="note">Cuando está activa, solo se puede firmar a media milla (0.5 mi, unos 800 m) o menos del punto fijado. Fíjala estando en la obra. Comparte el enlace de la obra para que los demás bajen la app con esta restricción ya puesta; ellos no pueden verla ni cambiarla.</div>
     </div>
     <datalist id="dl_project"></datalist><datalist id="dl_location"></datalist><datalist id="dl_prepared"></datalist><datalist id="dl_supervisor"></datalist>
   </section>
@@ -189,6 +196,7 @@ input[type=time]{padding:10px 8px;font-size:17px}
 </div></div>
 
 <!-- Signature modal -->
+<div id="camModal" role="dialog" aria-modal="true" aria-label="Foto"><video id="camVideo" playsinline muted autoplay></video><div id="camCount"></div><div id="camMsg">Mire a la cámara / Look at the camera</div></div>
 <div class="modal" id="sigModal" role="dialog" aria-modal="true">
   <div class="sheet">
     <div class="mhead" id="sigTitle">Firma / Signature<small>Firme con el dedo dentro del recuadro. Puede girar el teléfono para más espacio.</small></div>
@@ -247,6 +255,10 @@ input[type=time]{padding:10px 8px;font-size:17px}
 <div class="busy" id="busy">Generando PDF…</div>
 <div class="toast" id="toast"></div>
 
+<script>(function(){try{var m=/[?&]obra=(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/.exec(location.search);if(!m)return;var la=+m[1],lo=+m[2];if(Math.abs(la)>90||Math.abs(lo)>180)return;
+var old=JSON.parse(localStorage.getItem('dwe_geofence_v1')||'null');var d=new Date();
+localStorage.setItem('dwe_geofence_v1',JSON.stringify({lat:la,lon:lo,acc:0,locked:true,when:'enlace '+(d.getMonth()+1)+'/'+d.getDate()}));
+if(history.replaceState)history.replaceState(null,'',location.pathname);}catch(e){}})();</script>
 <script>
 (function(){
 'use strict';
@@ -277,7 +289,7 @@ function lastSub(){var v=lsGetJ(K_SUB,'');return SUBS.indexOf(v)>=0?v:'';}
 
 function todayISO(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 function nowHM(){var d=new Date();return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');}
-function emptyRow(){return {name:'',sub:'',role:'',time:'',out:'',sig:'',sigV:null,sigO:'',sigOV:null};}
+function emptyRow(){return {name:'',sub:'',role:'',time:'',out:'',sig:'',sigV:null,sigO:'',sigOV:null,photo:'',photoO:''};}
 
 var state={h:{date:todayISO(),project:'',location:'',prepared:'',supervisor:'',task:''},dateSetOn:todayISO(),notes:'',rows:[]};
 for(var i=0;i<ROWS_PER_PAGE;i++)state.rows.push(emptyRow());
@@ -293,7 +305,7 @@ function load(){
     if(s&&s.h){
       HDR.forEach(function(k){if(typeof s.h[k]==='string')state.h[k]=s.h[k];});
       if(typeof s.notes==='string')state.notes=s.notes;
-      if(Array.isArray(s.rows)&&s.rows.length){state.rows=s.rows.map(function(r){return {name:r.name||'',sub:r.sub||'',role:r.role||'',time:r.time||'',out:r.out||'',sig:r.sig||'',sigV:r.sigV||null,sigO:r.sigO||'',sigOV:r.sigOV||null};});
+      if(Array.isArray(s.rows)&&s.rows.length){state.rows=s.rows.map(function(r){return {name:r.name||'',sub:r.sub||'',role:r.role||'',time:r.time||'',out:r.out||'',sig:r.sig||'',sigV:r.sigV||null,sigO:r.sigO||'',sigOV:r.sigOV||null,photo:r.photo||'',photoO:r.photoO||''};});
         while(state.rows.length<ROWS_PER_PAGE)state.rows.push(emptyRow());}
       if(typeof s.dateSetOn==='string')state.dateSetOn=s.dateSetOn;else state.dateSetOn='';
     }
@@ -340,7 +352,7 @@ function fillDatalists(){var h=lsGetJ(K_HIST,{})||{};['project','location','prep
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
 function rowHTML(i){
   var r=state.rows[i];
-  return '<div class="rowhead"><div class="num">#'+(i+1)+(r.sig?'<span>✔ firmado</span>':'')+(r.sigO?'<span>🚪 salida</span>':'')+'</div><button class="clr" data-act="clear" data-i="'+i+'">Vaciar fila</button></div>'+
+  return '<div class="rowhead"><div class="num">#'+(i+1)+(r.sig?'<span>✔ firmado</span>':'')+(r.sigO?'<span>🚪 salida</span>':'')+((r.photo||r.photoO)?'<span class="thumbs">'+(r.photo?'<img alt="foto entrada" src="'+r.photo+'">':'')+(r.photoO?'<img alt="foto salida" src="'+r.photoO+'">':'')+'</span>':'')+'</div><button class="clr" data-act="clear" data-i="'+i+'">Vaciar fila</button></div>'+
   '<label class="f">PRINT NAME / <i>NOMBRE EN LETRA DE IMPRENTA</i></label>'+
   '<div class="nameWrap"><input type="text" data-k="name" data-i="'+i+'" value="'+esc(r.name)+'" autocomplete="off" autocapitalize="characters"><button class="lbtn" type="button" data-act="names" data-i="'+i+'" aria-label="Elegir nombre de la lista">📋</button></div>'+
   '<label class="f">SUBCONTRACTOR / <i>SUBCONTRATISTA</i></label>'+
@@ -526,7 +538,7 @@ window.addEventListener('resize',function(){if(!$('sigModal').classList.contains
 var K_GEO='dwe_geofence_v1',GEO_M=804.672,geoLastOk=0;
 function getGeo(){var g=lsGetJ(K_GEO,null);return g&&typeof g.lat==='number'&&typeof g.lon==='number'?g:null;}
 function distM(a,b,c,d){var R=6371000,t=Math.PI/180,dl=(c-a)*t,dn=(d-b)*t,x=Math.sin(dl/2)*Math.sin(dl/2)+Math.cos(a*t)*Math.cos(c*t)*Math.sin(dn/2)*Math.sin(dn/2);return 2*R*Math.asin(Math.sqrt(x));}
-function geoStatus(){var g=getGeo(),e=$('geoSt');if(!e)return;
+function geoStatus(){if(typeof $('geoOff')==='undefined')return;var g=getGeo(),e=$('geoSt');if(!e)return;
   if(g){e.className='geoSt on';e.textContent='✔ Activa: solo se firma a 0.5 mi del punto fijado'+(g.when?' ('+g.when+')':'')+'.';}
   else{e.className='geoSt off';e.textContent='Sin restricción: se puede firmar desde cualquier lugar.';}
   $('geoOff').style.display=g?'block':'none';}
@@ -538,8 +550,24 @@ function geoCheck(cb){var g=getGeo();if(!g){cb(true);return;}
     if(d-acc>GEO_M){var mi=(d/1609.344);toast('Estás a '+(mi<10?mi.toFixed(1):Math.round(mi))+' mi del proyecto. Solo se puede firmar a 0.5 mi o menos.');cb(false);}
     else{geoLastOk=Date.now();cb(true);}
   },function(e){toast(geoErr(e));cb(false);});}
-$('geoSet').onclick=function(){toast('Obteniendo ubicación…');getPos(function(pos){var c=pos.coords,dt=new Date();lsSetJ(K_GEO,{lat:c.latitude,lon:c.longitude,acc:c.accuracy||0,when:(dt.getMonth()+1)+'/'+dt.getDate()+' '+nowHM()});geoLastOk=Date.now();geoStatus();toast('Ubicación del proyecto fijada ✔');},function(e){toast(geoErr(e));});};
-$('geoOff').onclick=function(){if(!confirm('¿Quitar la restricción de ubicación? Se podrá firmar desde cualquier lugar.'))return;try{localStorage.removeItem(K_GEO);}catch(e){}geoStatus();toast('Restricción quitada');};
+$('geoSet').onclick=function(){if(!isAdmin())return;toast('Obteniendo ubicación…');getPos(function(pos){var c=pos.coords,dt=new Date();lsSetJ(K_GEO,{lat:c.latitude,lon:c.longitude,acc:c.accuracy||0,locked:false,when:(dt.getMonth()+1)+'/'+dt.getDate()+' '+nowHM()});geoLastOk=Date.now();geoStatus();toast('Ubicación del proyecto fijada ✔');},function(e){toast(geoErr(e));});};
+$('geoOff').onclick=function(){if(!isAdmin())return;if(!confirm('¿Quitar la restricción de ubicación? Se podrá firmar desde cualquier lugar.'))return;try{localStorage.removeItem(K_GEO);}catch(e){}geoStatus();toast('Restricción quitada');};
+/* ---------- modo administrador (solo este teléfono, con PIN) ---------- */
+var K_ADM='dwe_admin_v1',ADM_HASH='3c19dccb306f2f8f8fbb356eaabb695e07ef223e2a9568dc7e9145ccaecc2fde';
+function isAdmin(){try{return localStorage.getItem(K_ADM)==='1';}catch(e){return false;}}
+function sha256hex(t){return crypto.subtle.digest('SHA-256',new TextEncoder().encode(t)).then(function(b){return Array.prototype.map.call(new Uint8Array(b),function(x){return ('0'+x.toString(16)).slice(-2);}).join('');});}
+function admUI(){var a=isAdmin();$('geoBox').style.display=a?'block':'none';$('admBtn').textContent=a?'🔓 Administrador activo (tocar para salir)':'🔒 Administrador';}
+$('admBtn').onclick=function(){
+  if(isAdmin()){if(confirm('¿Salir del modo administrador en este teléfono?')){try{localStorage.removeItem(K_ADM);}catch(e){}admUI();toast('Modo administrador desactivado');}return;}
+  var pin=prompt('PIN de administrador:');if(pin==null||pin==='')return;
+  if(!(window.crypto&&crypto.subtle)){toast('Este navegador no permite verificar el PIN');return;}
+  sha256hex('firmax-admin|'+pin.trim()).then(function(h){if(h===ADM_HASH){try{localStorage.setItem(K_ADM,'1');}catch(e){}admUI();toast('Modo administrador activado ✔');}else toast('PIN incorrecto');});};
+$('geoLink').onclick=function(){var g=getGeo();if(!g){toast('Primero fija la ubicación del proyecto');return;}
+  var u=new URL('./?obra='+g.lat.toFixed(6)+','+g.lon.toFixed(6),location.href).href;
+  if(navigator.share){navigator.share({title:'Firmax – obra',text:'Baja la app Firmax con la ubicación de la obra:',url:u}).catch(function(){});}
+  else if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(u).then(function(){toast('Enlace de la obra copiado');},function(){prompt('Copia este enlace:',u);});}
+  else prompt('Copia este enlace:',u);};
+admUI();
 geoStatus();
 var sigOut=false;
 function openSig(i,isOut){geoCheck(function(ok){if(ok)openSigReal(i,isOut);});}
@@ -553,6 +581,26 @@ var sigSaveGuard=function(){if(!getGeo()||Date.now()-geoLastOk<180000){sigSaveRe
 function closeSig(){$('sigModal').classList.remove('open');document.body.style.overflow='';sigRow=-1;strokes=[];}
 $('sigClear').onclick=function(){strokes=[];cur=null;redrawPad();};
 $('sigCancel').onclick=closeSig;
+/* ---------- foto al firmar: cuenta de 3 s y cámara frontal ---------- */
+function takePhoto(done){
+  var md=navigator.mediaDevices;
+  if(!md||!md.getUserMedia){toast('Este teléfono no permite usar la cámara');done('');return;}
+  var modal=$('camModal'),v=$('camVideo'),cnt=$('camCount'),msg=$('camMsg'),stream=null,finished=false;
+  function end(url){if(finished)return;finished=true;try{if(stream)stream.getTracks().forEach(function(t){t.stop();});}catch(e){}v.srcObject=null;modal.classList.remove('open');done(url||'');}
+  md.getUserMedia({video:{facingMode:'user',width:{ideal:640},height:{ideal:640}},audio:false}).then(function(st){
+    stream=st;v.srcObject=st;modal.classList.add('open');var pl=v.play();if(pl&&pl.catch)pl.catch(function(){});
+    var n=3;cnt.textContent=n;
+    var iv=setInterval(function(){n--;if(n>0){cnt.textContent=n;return;}
+      clearInterval(iv);cnt.textContent='';msg.textContent='';
+      setTimeout(function(){
+        try{var vw=v.videoWidth||640,vh=v.videoHeight||480,sc=Math.min(1,520/Math.max(vw,vh));
+          var c=document.createElement('canvas');c.width=Math.round(vw*sc);c.height=Math.round(vh*sc);c.getContext('2d').drawImage(v,0,0,c.width,c.height);
+          end(c.toDataURL('image/jpeg',0.72));}catch(e){end('');}
+      },150);
+    },1000);
+  }).catch(function(e){toast(e&&e.name==='NotAllowedError'?'No se tomó la foto: permite el acceso a la cámara':'No se pudo abrir la cámara');done('');});
+  msg.textContent='Mire a la cámara / Look at the camera';
+}
 var sigSaveReal=function(){
   var pts=0;strokes.forEach(function(s){pts+=s.length;});
   if(!pts){toast('Firme primero / Please sign first');return;}
@@ -572,6 +620,7 @@ var sigSaveReal=function(){
   else{r.sig=url;r.sigV=sv;if(!r.time)r.time=nowHM();}
   if(!r.sub&&lastSub())r.sub=lastSub();
   var i=sigRow;var wasOut=sigOut;closeSig();renderRow(i);saveNow();toast(wasOut?'Salida firmada '+fmtTime(r.out)+' ✔':'Firma guardada ✔');
+  setTimeout(function(){takePhoto(function(url){if(!url)return;if(wasOut)r.photoO=url;else r.photo=url;renderRow(i);saveNow();toast('Foto guardada 📷');});},700);
 };
 $('sigSave').onclick=sigSaveGuard;
 
@@ -705,13 +754,33 @@ function drawPage(ctx,pageIdx,pages,sigImgs){
   if(pages>1){ctx.font=F(500,22);ctx.fillStyle='#374151';fit(ctx,'Página '+(pageIdx+1)+' de '+pages+' / Page '+(pageIdx+1)+' of '+pages,1580,2192,400,'right');}
 }
 
+function drawPhotoPage(ctx,items,q,np){
+  ctx.fillStyle='#fff';ctx.fillRect(0,0,W,H);ctx.fillStyle='#000';
+  ctx.font=F(700,56);ctx.textAlign='left';ctx.fillText('PHOTOS / FOTOS',100,120);
+  ctx.font=F(500,30);var hd=((state.h.project||'')+(state.h.date?'  –  '+fmtDate(state.h.date):''));fit(ctx,hd,100,170,1500);
+  if(np>1){ctx.font=F(500,22);ctx.fillStyle='#374151';fit(ctx,'Fotos '+(q+1)+' de '+np,1600,2160,300,'right');ctx.fillStyle='#000';}
+  var cw=470,ch=420,gx=(W-200-3*cw)/2,gy=40,x0=100,y0=220;
+  items.forEach(function(it,k){var col=k%3,row=Math.floor(k/3),x=x0+col*(cw+gx),y=y0+row*(ch+gy+90);
+    var iw=it.im.width,ih=it.im.height,sc=Math.min(cw/iw,ch/ih),dw=iw*sc,dh=ih*sc;
+    ctx.fillStyle='#f3f4f6';ctx.fillRect(x,y,cw,ch);ctx.drawImage(it.im,x+(cw-dw)/2,y+(ch-dh)/2,dw,dh);
+    ctx.strokeStyle='#9ca3af';ctx.lineWidth=2;ctx.strokeRect(x,y,cw,ch);
+    ctx.fillStyle='#0b1f5c';ctx.font=F(700,30);fit(ctx,'#'+it.n+'  '+String(it.name||'').toUpperCase(),x,y+ch+36,cw);
+    ctx.fillStyle='#374151';ctx.font=F(500,26);fit(ctx,it.kind+(it.t?'  –  '+fmtTime(it.t):''),x,y+ch+72,cw);});
+}
 function renderPages(){
   var pages=Math.max(1,Math.ceil(state.rows.length/ROWS_PER_PAGE));
   var fontsReady=(document.fonts&&document.fonts.load)?Promise.all([F(700,40),F(500,40),F(500,40,true),F(700,40,true)].map(function(f){return document.fonts.load(f,'AÁñ');})).catch(function(){}):Promise.resolve();
-  return fontsReady.then(function(){return Promise.all(state.rows.map(function(r){return r.sig?loadImg(r.sig):Promise.resolve(null);}).concat(state.rows.map(function(r){return r.sigO?loadImg(r.sigO):Promise.resolve(null);})));})
+  var NR=state.rows.length;
+  return fontsReady.then(function(){return Promise.all(state.rows.map(function(r){return r.sig?loadImg(r.sig):Promise.resolve(null);}).concat(state.rows.map(function(r){return r.sigO?loadImg(r.sigO):Promise.resolve(null);})).concat(state.rows.map(function(r){return r.photo?loadImg(r.photo):Promise.resolve(null);})).concat(state.rows.map(function(r){return r.photoO?loadImg(r.photoO):Promise.resolve(null);})));})
   .then(function(imgs){
     var out=[];
     for(var p=0;p<pages;p++){var cv=document.createElement('canvas');cv.width=W;cv.height=H;drawPage(cv.getContext('2d'),p,pages,imgs);out.push(cv);}
+    var items=[];
+    state.rows.forEach(function(r,k){
+      if(imgs[2*NR+k])items.push({im:imgs[2*NR+k],n:k+1,name:r.name,kind:'ENTRADA / IN',t:r.time});
+      if(imgs[3*NR+k])items.push({im:imgs[3*NR+k],n:k+1,name:r.name,kind:'SALIDA / OUT',t:r.out});});
+    var PER=12,np=Math.ceil(items.length/PER);
+    for(var q=0;q<np;q++){var c2=document.createElement('canvas');c2.width=W;c2.height=H;drawPhotoPage(c2.getContext('2d'),items.slice(q*PER,(q+1)*PER),q,np);out.push(c2);}
     return out;
   });
 }
