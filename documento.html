@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1f2937">
+<title>Firmar documento – Drywall Enterprise</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<style>
+:root{--ink:#111827;--muted:#6b7280;--line:#d1d5db;--bg:#e5e7eb;--acc:#c2410c;--acc2:#9a3412;--sel:#2563eb}
+*{box-sizing:border-box}
+button,label,input,a{touch-action:manipulation}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;font-size:17px;-webkit-text-size-adjust:100%}
+body{padding-bottom:calc(150px + env(safe-area-inset-bottom))}
+header{position:sticky;top:0;z-index:20;background:#fff;border-bottom:3px solid var(--ink);padding:10px 12px;display:flex;align-items:center;gap:10px}
+header a{font-weight:700;font-size:15px;color:var(--ink);text-decoration:none;border:2px solid var(--ink);border-radius:10px;padding:6px 10px;flex:none}
+header h1{font-size:18px;margin:0;line-height:1.15;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+header h1 small{display:block;font-size:13px;color:var(--muted);font-weight:500;overflow:hidden;text-overflow:ellipsis}
+.btn{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;font:inherit;font-weight:700;font-size:17px;padding:13px 12px;border-radius:12px;border:2px solid var(--ink);background:#fff;color:var(--ink);min-height:52px;cursor:pointer;text-align:center}
+.btn.pri{background:var(--acc);border-color:var(--acc);color:#fff}
+.btn.pri:active{background:var(--acc2)}
+.btn.dark{background:var(--ink);color:#fff}
+.btn.ghost{border-color:#9ca3af;color:#374151}
+.btn:disabled{opacity:.5}
+input[type=file]{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+#start{max-width:520px;margin:0 auto;padding:22px 16px}
+#start p{color:#374151;line-height:1.4}
+#start .btn{margin:12px 0}
+#start .note{font-size:14px;color:var(--muted)}
+#tools{position:sticky;top:62px;z-index:15;background:#f9fafb;border-bottom:1px solid var(--line);padding:8px 10px;display:none;gap:6px;overflow-x:auto}
+#tools.on{display:flex}
+.tool{flex:1 0 auto;font:inherit;font-weight:700;font-size:15px;padding:9px 10px;border-radius:10px;border:2px solid #9ca3af;background:#fff;color:#374151;min-height:44px;white-space:nowrap}
+.tool.on{border-color:var(--acc);background:#fff7ed;color:var(--acc2)}
+#hint{display:none;text-align:center;font-size:14.5px;color:#374151;padding:8px 12px 0}
+#pages{padding:10px 8px;max-width:900px;margin:0 auto}
+.pwrap{margin:0 auto 14px}
+.plabel{font-size:13px;color:var(--muted);margin:0 0 4px 2px;display:flex;justify-content:space-between}
+.plabel button{font:inherit;font-size:13px;border:0;background:none;color:#b91c1c;padding:0 2px}
+.page{position:relative;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.25);overflow:hidden;user-select:none;-webkit-user-select:none}
+.page canvas{display:block;width:100%;height:auto}
+.page .ph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#9ca3af;font-size:14px}
+.ov{position:absolute;touch-action:none;cursor:move}
+.ov img{display:block;width:100%;height:auto;pointer-events:none}
+.ov.sel{outline:2px dashed var(--sel);outline-offset:2px;background:rgba(37,99,235,.06)}
+.ov .h{display:none;position:absolute;width:34px;height:34px;border-radius:50%;background:var(--sel);color:#fff;font-size:18px;font-weight:700;align-items:center;justify-content:center;line-height:1;box-shadow:0 1px 3px rgba(0,0,0,.35);touch-action:none}
+.ov.sel .h{display:flex}
+.ov .h.del{top:-20px;right:-20px;background:#b91c1c}
+.ov .h.rsz{bottom:-20px;right:-20px;cursor:nwse-resize}
+.ov .h.edt{top:-20px;left:-20px;background:#374151}
+.bar{position:fixed;left:0;right:0;bottom:0;z-index:30;background:#fff;border-top:1px solid var(--line);padding:10px 12px calc(10px + env(safe-area-inset-bottom));box-shadow:0 -4px 14px rgba(0,0,0,.08);display:none}
+.bar.on{display:block}
+.bar .row{display:grid;grid-template-columns:1fr 1fr;gap:8px;max-width:640px;margin:0 auto}
+.bar .row+.row{margin-top:8px}
+.modal{position:fixed;inset:0;background:rgba(17,24,39,.6);z-index:60;display:none;align-items:flex-end;justify-content:center}
+.modal.open{display:flex}
+.sheet{background:#fff;width:100%;max-width:640px;border-radius:16px 16px 0 0;padding:14px 14px calc(14px + env(safe-area-inset-bottom))}
+.sheet h3{margin:0 0 8px;font-size:18px}
+.sheet .row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.sheet .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px}
+#padBox{position:relative;border:2px dashed #9ca3af;border-radius:12px;background:#fff;height:min(46vh,260px)}
+#pad{position:absolute;inset:0;width:100%;height:100%;touch-action:none;border-radius:12px}
+#padBox .line{position:absolute;left:16px;right:16px;bottom:26%;border-bottom:1.5px solid #d1d5db;pointer-events:none}
+#padBox .x{position:absolute;left:14px;bottom:26%;font-size:20px;color:#9ca3af;pointer-events:none}
+.inks{display:flex;gap:10px;align-items:center;margin-top:8px;font-size:14px;color:#374151}
+.ink{width:30px;height:30px;border-radius:50%;border:3px solid #fff;outline:2px solid #d1d5db}
+.ink.on{outline:3px solid var(--acc)}
+#txtIn{width:100%;font:inherit;font-size:19px;padding:12px;border:2px solid #9ca3af;border-radius:10px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chip{font:inherit;font-size:14px;border:1.5px solid #9ca3af;background:#f9fafb;border-radius:999px;padding:6px 12px}
+.busy{position:fixed;inset:0;background:rgba(255,255,255,.8);display:none;align-items:center;justify-content:center;z-index:80;font-weight:700;font-size:19px;text-align:center;padding:20px}
+.busy.open{display:flex}
+.toast{position:fixed;left:50%;bottom:170px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 16px;border-radius:10px;font-size:15px;z-index:90;opacity:0;transition:opacity .25s;pointer-events:none;max-width:90%;text-align:center}
+.toast.show{opacity:1}
+</style>
+</head>
+<body>
+<header>
+  <a href="./">‹ Inicio</a>
+  <h1 id="ttl">Firmar otro documento<small id="sub">PDF, imagen o foto</small></h1>
+</header>
+
+<input type="file" id="fileIn" accept="application/pdf,image/*">
+<input type="file" id="camIn" accept="image/*" capture="environment">
+<input type="file" id="addImgIn" accept="image/*" multiple>
+<input type="file" id="addCamIn" accept="image/*" capture="environment">
+
+<section id="start">
+  <p>Abre el documento que hay que firmar. Después toca la página donde va cada firma, nombre o fecha y guarda el resultado como PDF.</p>
+  <label class="btn pri" for="fileIn">📂 Elegir PDF o imagen</label>
+  <label class="btn" for="camIn">📷 Tomar foto del documento</label>
+  <p class="note">Todo se procesa en este teléfono; no se sube nada a internet.</p>
+</section>
+
+<div id="tools">
+  <button class="tool on" data-t="sig">✍️ Firma</button>
+  <button class="tool" data-t="text">🔤 Texto</button>
+  <button class="tool" data-t="date">📅 Fecha</button>
+  <button class="tool" data-t="move">✋ Mover</button>
+</div>
+<div id="hint"></div>
+<div id="pages"></div>
+
+<div class="bar" id="bar">
+  <div class="row">
+    <button class="btn pri" id="saveBtn">📄 Guardar PDF</button>
+    <button class="btn dark" id="shareBtn">📤 Compartir / Enviar</button>
+  </div>
+  <div class="row">
+    <button class="btn ghost" id="addPgBtn">➕ Añadir página</button>
+    <button class="btn ghost" id="newBtn">🗂️ Otro documento</button>
+  </div>
+</div>
+
+<div class="modal" id="sigModal">
+  <div class="sheet">
+    <h3>Firma con el dedo</h3>
+    <div id="padBox"><span class="x">✕</span><div class="line"></div><canvas id="pad"></canvas></div>
+    <div class="inks">Color:
+      <button class="ink on" data-c="#111827" style="background:#111827" aria-label="Negro"></button>
+      <button class="ink" data-c="#1d3fa8" style="background:#1d3fa8" aria-label="Azul"></button>
+    </div>
+    <div class="row3">
+      <button class="btn ghost" id="sigCancel">Cancelar</button>
+      <button class="btn ghost" id="sigClear">Borrar</button>
+      <button class="btn pri" id="sigOk">Colocar</button>
+    </div>
+    <button class="btn ghost" id="sigLast" style="margin-top:8px;display:none">↩️ Usar mi última firma</button>
+  </div>
+</div>
+
+<div class="modal" id="txtModal">
+  <div class="sheet">
+    <h3 id="txtTitle">Texto</h3>
+    <input id="txtIn" type="text" autocomplete="name" placeholder="Nombre, fecha, iniciales…">
+    <div class="chips" id="chips"></div>
+    <div class="row">
+      <button class="btn ghost" id="txtCancel">Cancelar</button>
+      <button class="btn pri" id="txtOk">Colocar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="addModal">
+  <div class="sheet">
+    <h3>Añadir página</h3>
+    <div class="row">
+      <label class="btn" for="addImgIn">🖼️ Imagen</label>
+      <label class="btn" for="addCamIn">📷 Foto</label>
+    </div>
+    <button class="btn ghost" id="addCancel" style="margin-top:8px">Cancelar</button>
+  </div>
+</div>
+
+<div class="busy" id="busy">Procesando…</div>
+<div class="toast" id="toast"></div>
+
+<script src="lib/pdf-lib.min.js"></script>
+<script src="share.js"></script>
+<script>
+(function(){
+'use strict';
+var $=function(id){return document.getElementById(id);};
+var LS_SIG='dwe_doc_lastsig', LS_NAMES='dwe_doc_names';
+var pdfjsP=null;
+function pdfjs(){
+  if(!pdfjsP)pdfjsP=import('./lib/pdfjs/pdf.min.mjs').then(function(m){
+    m.GlobalWorkerOptions.workerSrc=new URL('./lib/pdfjs/pdf.worker.min.mjs',location.href).href;return m;});
+  return pdfjsP;
+}
+var PDFJS_OPTS={cMapUrl:'./lib/pdfjs/cmaps/',cMapPacked:true,standardFontDataUrl:'./lib/pdfjs/standard_fonts/',wasmUrl:'./lib/pdfjs/wasm/',isEvalSupported:false,enableScripting:false};
+
+/* doc = {name, kind:'pdf'|'img', bytes:Uint8Array (pdf), pdf:(pdfjs doc), pages:[{wPt,hPt,jpeg?,el,ovs:[]}]} */
+var doc=null, tool='sig', sel=null, pending=null, seq=0, dirty=false;
+
+function toast(m){var t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(function(){t.classList.remove('show');},2800);}
+function busy(on,msg){$('busy').textContent=msg||'Procesando…';$('busy').classList.toggle('open',!!on);}
+function readBytes(f){return f.arrayBuffer?f.arrayBuffer().then(function(b){return new Uint8Array(b);}):new Promise(function(res,rej){var r=new FileReader();r.onload=function(){res(new Uint8Array(r.result));};r.onerror=rej;r.readAsArrayBuffer(f);});}
+function canvasToBytes(cv,type,q){return new Promise(function(res){cv.toBlob(function(b){b.arrayBuffer().then(function(a){res(new Uint8Array(a));});},type,q);});}
+function todayStr(){var d=new Date();return String(d.getMonth()+1).padStart(2,'0')+'/'+String(d.getDate()).padStart(2,'0')+'/'+d.getFullYear();}
+function isPdf(f,b){return /pdf/i.test(f.type)||/\.pdf$/i.test(f.name)||(b&&b[0]===37&&b[1]===80&&b[2]===68&&b[3]===70);}
+
+/* ---------- loading ---------- */
+function resetDoc(){doc=null;sel=null;dirty=false;$('pages').innerHTML='';}
+function openFile(f){
+  if(!f)return;
+  if(doc&&dirty&&!confirm('¿Descartar el documento actual y sus firmas?'))return;
+  busy(true,'Abriendo documento…');
+  readBytes(f).then(function(b){
+    resetDoc();
+    var base=(f.name||'documento').replace(/\.[^.]+$/,'')||'documento';
+    if(isPdf(f,b))return loadPdf(b,base);
+    doc={name:base,kind:'img',pages:[]};
+    return addImagePage(f);
+  }).then(function(){busy(false);showDoc();})
+  .catch(function(e){busy(false);console.error(e);
+    var msg=(e&&e.name==='PasswordException')?'Este PDF está protegido con contraseña y no se puede abrir.':'No se pudo abrir el archivo: '+(e&&e.message||e);
+    toast(msg);if(!doc||!doc.pages.length){resetDoc();showStart();}});
+}
+function loadPdf(b,base){
+  doc={name:base,kind:'pdf',bytes:b.slice(0),pages:[]};
+  return pdfjs().then(function(lib){
+    var o=Object.assign({data:b},PDFJS_OPTS);
+    return lib.getDocument(o).promise;
+  }).then(function(pdf){
+    doc.pdf=pdf;var chain=Promise.resolve();
+    for(var n=1;n<=pdf.numPages;n++)(function(n){chain=chain.then(function(){return pdf.getPage(n).then(function(pg){
+      var vp=pg.getViewport({scale:1});var p={n:n,wPt:vp.width,hPt:vp.height,pg:pg,ovs:[]};doc.pages.push(p);buildPage(p);
+    });});})(n);
+    return chain;
+  }).then(function(){return renderAllPdf();});
+}
+function renderAllPdf(){
+  var chain=Promise.resolve();
+  doc.pages.forEach(function(p){chain=chain.then(function(){return renderPdfPage(p);});});
+  return chain;
+}
+function renderPdfPage(p){
+  var cssW=p.el.clientWidth||Math.min(window.innerWidth-16,900);
+  var dpr=Math.min(window.devicePixelRatio||1,2.5);
+  var scale=Math.min(cssW*dpr/p.wPt,2200/p.wPt);
+  var vp=p.pg.getViewport({scale:scale});
+  var cv=p.cv;cv.width=Math.floor(vp.width);cv.height=Math.floor(vp.height);
+  var ctx=cv.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,cv.width,cv.height);
+  return p.pg.render({canvasContext:ctx,canvas:cv,viewport:vp}).promise.then(function(){var ph=p.el.querySelector('.ph');if(ph)ph.remove();});
+}
+function loadImg(f){return new Promise(function(res,rej){var u=URL.createObjectURL(f),im=new Image();im.onload=function(){res(im);};im.onerror=function(){URL.revokeObjectURL(u);rej(new Error('formato de imagen no compatible'));};im.src=u;});}
+function addImagePage(f){
+  return loadImg(f).then(function(im){
+    var w=im.naturalWidth,h=im.naturalHeight,k=Math.min(1,2200/Math.max(w,h));
+    var cv=document.createElement('canvas');cv.width=Math.round(w*k);cv.height=Math.round(h*k);
+    var ctx=cv.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,cv.width,cv.height);ctx.drawImage(im,0,0,cv.width,cv.height);
+    URL.revokeObjectURL(im.src);
+    return canvasToBytes(cv,'image/jpeg',0.88).then(function(jpg){
+      var wPt=612,hPt=612*cv.height/cv.width;
+      var p={n:doc.pages.length+1,wPt:wPt,hPt:hPt,jpeg:jpg,ovs:[]};doc.pages.push(p);buildPage(p);
+      p.cv.width=cv.width;p.cv.height=cv.height;p.cv.getContext('2d').drawImage(cv,0,0);
+      var ph=p.el.querySelector('.ph');if(ph)ph.remove();
+    });
+  });
+}
+function buildPage(p){
+  var w=document.createElement('div');w.className='pwrap';
+  var lab=document.createElement('div');lab.className='plabel';w.appendChild(lab);
+  var el=document.createElement('div');el.className='page';el.style.aspectRatio=p.wPt+' / '+p.hPt;
+  var cv=document.createElement('canvas');el.appendChild(cv);
+  var ph=document.createElement('div');ph.className='ph';ph.textContent='Cargando página…';el.appendChild(ph);
+  w.appendChild(el);$('pages').appendChild(w);
+  p.el=el;p.cv=cv;p.wrap=w;p.lab=lab;
+  el.addEventListener('click',function(e){onPageTap(p,e);});
+  relabel();
+}
+function relabel(){
+  if(!doc)return;var tot=doc.pages.length;
+  doc.pages.forEach(function(p,i){p.lab.innerHTML='<span>Página '+(i+1)+' de '+tot+'</span>'+(doc.kind==='img'&&tot>1?'<button data-rm="'+i+'">Quitar página</button>':'');});
+}
+$('pages').addEventListener('click',function(e){
+  var b=e.target.closest('[data-rm]');if(!b)return;e.stopPropagation();
+  var i=+b.getAttribute('data-rm');if(!confirm('¿Quitar la página '+(i+1)+'?'))return;
+  var p=doc.pages.splice(i,1)[0];p.wrap.remove();relabel();dirty=true;
+});
+
+function showStart(){$('start').style.display='block';$('tools').classList.remove('on');$('bar').classList.remove('on');$('hint').style.display='none';$('sub').textContent='PDF, imagen o foto';}
+function showDoc(){
+  if(!doc||!doc.pages.length){showStart();return;}
+  $('start').style.display='none';$('tools').classList.add('on');$('bar').classList.add('on');
+  $('sub').textContent=doc.name+' · '+doc.pages.length+' pág.';
+  $('addPgBtn').style.display=doc.kind==='img'?'':'none';
+  $('bar').querySelector('.row+.row').style.gridTemplateColumns=doc.kind==='img'?'1fr 1fr':'1fr';
+  setTool(tool);
+}
+
+/* ---------- tools ---------- */
+var HINTS={sig:'Toca la página donde va la firma.',text:'Toca la página donde va el texto (nombre, iniciales…).',date:'Toca la página donde va la fecha de hoy.',move:'Toca una firma o texto para moverlo, cambiar su tamaño o borrarlo.'};
+function setTool(t){tool=t;if(t!=='move')select(null);[].forEach.call(document.querySelectorAll('.tool'),function(b){b.classList.toggle('on',b.getAttribute('data-t')===t);});var h=$('hint');h.textContent=HINTS[t];h.style.display='block';}
+$('tools').addEventListener('click',function(e){var b=e.target.closest('.tool');if(b)setTool(b.getAttribute('data-t'));});
+
+function onPageTap(p,e){
+  if(e.target.closest('.ov'))return;
+  if(sel){select(null);return;}
+  if(tool==='move'){toast('Elige ✍️ Firma, 🔤 Texto o 📅 Fecha y toca la página.');return;}
+  var r=p.el.getBoundingClientRect();
+  pending={p:p,fx:(e.clientX-r.left)/r.width,fy:(e.clientY-r.top)/r.height};
+  if(tool==='sig')openSig();
+  else if(tool==='date')placeText(todayStr());
+  else openTxt();
+}
+
+/* overlays: {id,src(dataURL),aspect(hPx/wPx),x,y (frac of page),w (frac of page width),kind,text?} */
+function addOverlay(src,aspect,wPtWanted,kind,text){
+  var p=pending.p;pending=null;
+  var w=Math.min(wPtWanted/p.wPt,0.9);
+  var hFrac=w*aspect*p.wPt/p.hPt;
+  var o={id:++seq,src:src,aspect:aspect,w:w,kind:kind,text:text,x:0,y:0};
+  o.x=clamp(this_fx-w/2,0,1-w);o.y=clamp(this_fy-hFrac/2,0,Math.max(0,1-hFrac));
+  p.ovs.push(o);drawOverlay(p,o);select(o.el);dirty=true;setTool('move');
+}
+var this_fx=0,this_fy=0;
+function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
+function drawOverlay(p,o){
+  var d=document.createElement('div');d.className='ov';d._o=o;d._p=p;o.el=d;
+  d.innerHTML='<img alt=""><span class="h del" data-h="del">✕</span><span class="h rsz" data-h="rsz">⤡</span>'+(o.kind==='text'?'<span class="h edt" data-h="edt">✎</span>':'');
+  d.querySelector('img').src=o.src;
+  p.el.appendChild(d);position(o);
+  d.addEventListener('pointerdown',ovDown);
+  d.addEventListener('click',function(e){e.stopPropagation();});
+}
+function position(o){var s=o.el.style;s.left=(o.x*100)+'%';s.top=(o.y*100)+'%';s.width=(o.w*100)+'%';}
+function select(el){if(sel)sel.classList.remove('sel');sel=el;if(el)el.classList.add('sel');}
+var drag=null;
+function ovDown(e){
+  var d=e.currentTarget,o=d._o,p=d._p,h=e.target.getAttribute&&e.target.getAttribute('data-h');
+  e.preventDefault();e.stopPropagation();
+  if(h==='del'){if(sel===d)sel=null;d.remove();p.ovs=p.ovs.filter(function(x){return x!==o;});dirty=true;return;}
+  if(h==='edt'){select(d);pending={p:p,edit:o};openTxt(o.text);return;}
+  select(d);
+  var r=p.el.getBoundingClientRect();
+  drag={d:d,o:o,p:p,mode:h==='rsz'?'rsz':'mv',sx:e.clientX,sy:e.clientY,ox:o.x,oy:o.y,ow:o.w,rw:r.width,rh:r.height,id:e.pointerId};
+  try{d.setPointerCapture(e.pointerId);}catch(_){}
+}
+document.addEventListener('pointermove',function(e){
+  if(!drag||e.pointerId!==drag.id)return;e.preventDefault();
+  var o=drag.o,dx=(e.clientX-drag.sx)/drag.rw,dy=(e.clientY-drag.sy)/drag.rh;
+  if(drag.mode==='mv'){
+    var hF=o.w*o.aspect*drag.rw/drag.rh;
+    o.x=clamp(drag.ox+dx,-o.w*0.5,1-o.w*0.5);o.y=clamp(drag.oy+dy,-hF*0.5,1-hF*0.5);
+  }else{
+    o.w=clamp(drag.ow+dx,0.04,1);
+  }
+  position(o);dirty=true;
+},{passive:false});
+function endDrag(e){if(drag&&e.pointerId===drag.id)drag=null;}
+document.addEventListener('pointerup',endDrag);document.addEventListener('pointercancel',endDrag);
+
+/* ---------- signature pad ---------- */
+var pad=$('pad'),pctx=null,strokes=[],cur=null,ink='#111827';
+function openSig(){
+  $('sigModal').classList.add('open');document.body.style.overflow='hidden';
+  $('sigLast').style.display=lsGet(LS_SIG)?'flex':'none';
+  requestAnimationFrame(function(){sizePad();strokes=[];redraw();});
+}
+function closeSig(){$('sigModal').classList.remove('open');document.body.style.overflow='';}
+function sizePad(){var r=pad.getBoundingClientRect(),dpr=window.devicePixelRatio||1;pad.width=Math.round(r.width*dpr);pad.height=Math.round(r.height*dpr);pctx=pad.getContext('2d');}
+function lw(){return Math.max(2.2,pad.width/170);}
+function redraw(){pctx.clearRect(0,0,pad.width,pad.height);strokes.forEach(function(s){drawStroke(pctx,s,1,0,0);});}
+function drawStroke(c,s,k,ox,oy){
+  c.strokeStyle=s.c;c.fillStyle=s.c;c.lineCap='round';c.lineJoin='round';c.lineWidth=s.w*k;
+  var P=s.p;if(P.length===1){c.beginPath();c.arc((P[0][0]-ox)*k,(P[0][1]-oy)*k,s.w*k/2,0,7);c.fill();return;}
+  c.beginPath();c.moveTo((P[0][0]-ox)*k,(P[0][1]-oy)*k);
+  for(var i=1;i<P.length-1;i++){var mx=(P[i][0]+P[i+1][0])/2,my=(P[i][1]+P[i+1][1])/2;c.quadraticCurveTo((P[i][0]-ox)*k,(P[i][1]-oy)*k,(mx-ox)*k,(my-oy)*k);}
+  var L=P[P.length-1];c.lineTo((L[0]-ox)*k,(L[1]-oy)*k);c.stroke();
+}
+function padPt(e){var r=pad.getBoundingClientRect();return [(e.clientX-r.left)*pad.width/r.width,(e.clientY-r.top)*pad.height/r.height];}
+pad.addEventListener('pointerdown',function(e){e.preventDefault();try{pad.setPointerCapture(e.pointerId);}catch(_){}cur={c:ink,w:lw(),p:[padPt(e)]};strokes.push(cur);redraw();});
+pad.addEventListener('pointermove',function(e){if(!cur)return;e.preventDefault();var ev=e.getCoalescedEvents?e.getCoalescedEvents():[e];if(!ev.length)ev=[e];ev.forEach(function(x){cur.p.push(padPt(x));});redraw();});
+function padUp(){cur=null;}
+pad.addEventListener('pointerup',padUp);pad.addEventListener('pointercancel',padUp);
+$('sigClear').onclick=function(){strokes=[];redraw();};
+$('sigCancel').onclick=function(){closeSig();pending=null;};
+[].forEach.call(document.querySelectorAll('.ink'),function(b){b.onclick=function(){ink=b.getAttribute('data-c');[].forEach.call(document.querySelectorAll('.ink'),function(x){x.classList.toggle('on',x===b);});};});
+$('sigOk').onclick=function(){
+  if(!strokes.length){toast('Firma primero en el recuadro.');return;}
+  var x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;
+  strokes.forEach(function(s){s.p.forEach(function(q){x0=Math.min(x0,q[0]-s.w);y0=Math.min(y0,q[1]-s.w);x1=Math.max(x1,q[0]+s.w);y1=Math.max(y1,q[1]+s.w);});});
+  var pad2=6,bw=x1-x0+pad2*2,bh=y1-y0+pad2*2,k=Math.min(3,1400/bw);
+  var c=document.createElement('canvas');c.width=Math.ceil(bw*k);c.height=Math.ceil(bh*k);var cx=c.getContext('2d');
+  strokes.forEach(function(s){drawStroke(cx,s,k,x0-pad2,y0-pad2);});
+  var url=c.toDataURL('image/png');lsSet(LS_SIG,JSON.stringify({src:url,a:c.height/c.width,wr:bw/pad.width}));
+  closeSig();placeSig(url,c.height/c.width,bw/pad.width);
+};
+$('sigLast').onclick=function(){var s=JSON.parse(lsGet(LS_SIG)||'null');if(!s)return;closeSig();placeSig(s.src,s.a,s.wr);};
+function placeSig(url,aspect,wr){
+  var p=pending.p;this_fx=pending.fx;this_fy=pending.fy;
+  var wPt=Math.max(80,Math.min(p.wPt*0.38,200*(wr||1)));
+  addOverlay(url,aspect,wPt,'sig');
+}
+function lsGet(k){try{return localStorage.getItem(k);}catch(e){return null;}}
+function lsSet(k,v){try{localStorage.setItem(k,v);}catch(e){}}
+
+/* ---------- text ---------- */
+function openTxt(val){
+  $('txtTitle').textContent=val!=null?'Editar texto':'Texto';
+  var inp=$('txtIn');inp.value=val||'';
+  var names=JSON.parse(lsGet(LS_NAMES)||'[]');
+  var ch=[todayStr()].concat(names);
+  $('chips').innerHTML=ch.map(function(s){return '<button class="chip">'+s.replace(/[&<>"]/g,'')+'</button>';}).join('');
+  $('txtModal').classList.add('open');setTimeout(function(){inp.focus();},60);
+}
+$('chips').addEventListener('click',function(e){var b=e.target.closest('.chip');if(b){$('txtIn').value=b.textContent;$('txtIn').focus();}});
+$('txtCancel').onclick=function(){$('txtModal').classList.remove('open');pending=null;};
+$('txtIn').addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();$('txtOk').click();}});
+$('txtOk').onclick=function(){
+  var v=$('txtIn').value.trim();if(!v){toast('Escribe el texto.');return;}
+  $('txtModal').classList.remove('open');
+  if(v!==todayStr()){var names=JSON.parse(lsGet(LS_NAMES)||'[]').filter(function(n){return n!==v;});names.unshift(v);lsSet(LS_NAMES,JSON.stringify(names.slice(0,5)));}
+  if(pending&&pending.edit){var o=pending.edit,ratio=o.w/o.wPx0,r=textPng(v);
+    o.src=r.url;o.aspect=r.a;o.text=v;o.w=Math.min(0.95,ratio*r.w);o.wPx0=r.w;o.el.querySelector('img').src=r.url;position(o);pending=null;dirty=true;return;}
+  placeText(v);
+};
+function textPng(t){
+  var fs=96,font='600 '+fs+'px system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif';
+  var c=document.createElement('canvas'),x=c.getContext('2d');x.font=font;
+  var w=Math.ceil(x.measureText(t).width)+16,h=Math.ceil(fs*1.3);
+  c.width=w;c.height=h;x=c.getContext('2d');x.font=font;x.fillStyle='#111827';x.textBaseline='middle';x.fillText(t,8,h/2+2);
+  return {url:c.toDataURL('image/png'),a:h/w,w:w};
+}
+function placeText(t){
+  var r=textPng(t),p=pending.p;this_fx=pending.fx;this_fy=pending.fy;
+  var ptSize=Math.max(10,p.wPt/612*13);           // ~13pt on a letter page
+  var wPt=r.w/96*ptSize;
+  addOverlay(r.url,r.a,wPt,'text',t);
+  p.ovs[p.ovs.length-1].wPx0=r.w;
+}
+
+/* ---------- export ---------- */
+function dataUrlBytes(u){var b=atob(u.split(',')[1]),a=new Uint8Array(b.length);for(var i=0;i<b.length;i++)a[i]=b.charCodeAt(i);return a;}
+function rasterPdfPage(p){
+  var scale=Math.min(2,2400/Math.max(p.wPt,p.hPt))*1;
+  var vp=p.pg.getViewport({scale:scale});
+  var cv=document.createElement('canvas');cv.width=Math.floor(vp.width);cv.height=Math.floor(vp.height);
+  var ctx=cv.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,cv.width,cv.height);
+  return p.pg.render({canvasContext:ctx,canvas:cv,viewport:vp}).promise.then(function(){return canvasToBytes(cv,'image/jpeg',0.9);});
+}
+function buildOut(){
+  var L=window.PDFLib;if(!L)return Promise.reject(new Error('pdf-lib no cargó'));
+  var direct=null;
+  var start=(doc.kind==='pdf')?L.PDFDocument.load(doc.bytes,{updateMetadata:false}).then(function(d){
+      var pg=d.getPages();if(pg.length!==doc.pages.length)throw new Error('pages');
+      if(pg.some(function(x){return (x.getRotation().angle%360)!==0;}))throw new Error('rotated');
+      direct=d;return d;}).catch(function(e){console.warn('raster fallback',e);return null;})
+    :Promise.resolve(null);
+  return start.then(function(d){
+    if(d)return d;
+    return L.PDFDocument.create().then(function(nd){
+      var chain=Promise.resolve();
+      doc.pages.forEach(function(p){chain=chain.then(function(){
+        return (p.jpeg?Promise.resolve(p.jpeg):rasterPdfPage(p)).then(function(j){return nd.embedJpg(j);}).then(function(img){
+          var pg=nd.addPage([p.wPt,p.hPt]);pg.drawImage(img,{x:0,y:0,width:p.wPt,height:p.hPt});});
+      });});
+      return chain.then(function(){return nd;});
+    });
+  }).then(function(out){
+    var pages=out.getPages(),chain=Promise.resolve(),cache={};
+    doc.pages.forEach(function(p,i){
+      var pg=pages[i],box=(direct?pg.getCropBox():{x:0,y:0,width:p.wPt,height:p.hPt});
+      p.ovs.forEach(function(o){chain=chain.then(function(){
+        var em=cache[o.src]?Promise.resolve(cache[o.src]):out.embedPng(dataUrlBytes(o.src)).then(function(im){cache[o.src]=im;return im;});
+        return em.then(function(im){
+          var w=o.w*box.width,h=w*o.aspect;
+          pg.drawImage(im,{x:box.x+o.x*box.width,y:box.y+box.height-o.y*box.height-h,width:w,height:h});
+        });
+      });});
+    });
+    return chain.then(function(){
+      try{out.setProducer('Drywall Enterprise – Firmas');out.setModificationDate(new Date());}catch(e){}
+      return out.save();
+    });
+  }).then(function(bytes){
+    var name=doc.name.replace(/[^\w\- .áéíóúñÁÉÍÓÚÑ]+/g,'_')+'_firmado.pdf';
+    return {blob:new Blob([bytes],{type:'application/pdf'}),name:name};
+  });
+}
+function countOv(){return doc.pages.reduce(function(a,p){return a+p.ovs.length;},0);}
+$('saveBtn').onclick=function(){
+  if(!doc)return;if(!countOv()&&!confirm('No has añadido firmas ni texto. ¿Guardar igual?'))return;
+  select(null);busy(true,'Generando PDF…');
+  buildOut().then(function(f){busy(false);
+    var u=URL.createObjectURL(f.blob),a=document.createElement('a');a.href=u;a.download=f.name;document.body.appendChild(a);a.click();a.remove();
+    setTimeout(function(){URL.revokeObjectURL(u);},60000);dirty=false;toast('PDF guardado: '+f.name);
+  }).catch(function(e){busy(false);console.error(e);toast('Error al generar PDF: '+(e.message||e));});
+};
+function shareSubject(){var d=new Date();return 'Hoja de firmas – '+doc.name+' – '+todayStr();}
+$('shareBtn').onclick=function(){
+  if(!doc)return;select(null);
+  if(!window.DWShare){toast('Usa “Guardar PDF”.');return;}
+  window.DWShare.open({subject:shareSubject(),body:'Adjunto el documento firmado ('+doc.name+').',makeFile:buildOut,onDone:function(){dirty=false;}});
+};
+
+/* ---------- inputs ---------- */
+function onPick(inp,fn){inp.addEventListener('change',function(){var fs=[].slice.call(inp.files||[]);inp.value='';if(fs.length)fn(fs);});}
+onPick($('fileIn'),function(fs){openFile(fs[0]);});
+onPick($('camIn'),function(fs){openFile(fs[0]);});
+function addPages(fs){
+  $('addModal').classList.remove('open');busy(true,'Añadiendo página…');
+  var chain=Promise.resolve();fs.forEach(function(f){chain=chain.then(function(){return addImagePage(f);});});
+  chain.then(function(){busy(false);dirty=true;relabel();showDoc();doc.pages[doc.pages.length-1].wrap.scrollIntoView({behavior:'smooth'});})
+  .catch(function(e){busy(false);toast('No se pudo añadir: '+(e.message||e));});
+}
+onPick($('addImgIn'),addPages);onPick($('addCamIn'),addPages);
+$('addPgBtn').onclick=function(){$('addModal').classList.add('open');};
+$('addCancel').onclick=function(){$('addModal').classList.remove('open');};
+$('newBtn').onclick=function(){if(dirty&&!confirm('¿Descartar este documento y sus firmas?'))return;dirty=false;resetDoc();showStart();window.scrollTo(0,0);};
+window.addEventListener('beforeunload',function(e){if(dirty){e.preventDefault();e.returnValue='';}});
+var rT=null,lastW=window.innerWidth;
+window.addEventListener('resize',function(){if(!doc||doc.kind!=='pdf'||Math.abs(window.innerWidth-lastW)<40)return;lastW=window.innerWidth;clearTimeout(rT);rT=setTimeout(renderAllPdf,400);});
+
+if('serviceWorker' in navigator && location.protocol!=='file:'){
+  window.addEventListener('load',function(){navigator.serviceWorker.register('./sw.js',{scope:'./'}).catch(function(){});});
+  // warm the cache for pdf.js so PDFs open offline later
+  window.addEventListener('load',function(){setTimeout(function(){pdfjs().catch(function(){});},1500);});
+}
+window.DocSign={doc:function(){return doc;},openFile:openFile,buildOut:buildOut,_place:function(pi,fx,fy,kind,v){pending={p:doc.pages[pi],fx:fx,fy:fy};if(kind==='text')placeText(v);else placeSig(v.src,v.a,v.wr);}};
+})();
+</script>
+</body>
+</html>

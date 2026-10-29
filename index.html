@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1f2937">
+<title>Firmas – Drywall Enterprise</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Firmas">
+<style>
+:root{--ink:#111827;--muted:#6b7280;--bg:#f3f4f6;--acc:#c2410c;--acc2:#9a3412}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;font-size:17px}
+main{max-width:520px;margin:0 auto;padding:28px 18px calc(28px + env(safe-area-inset-bottom));min-height:100vh;display:flex;flex-direction:column}
+.logo{display:block;width:180px;max-width:60%;margin:8px auto 10px}
+h1{text-align:center;font-size:24px;margin:6px 0 4px}
+p.sub{text-align:center;color:var(--muted);margin:0 0 26px}
+a.big{display:flex;align-items:center;gap:14px;text-decoration:none;color:var(--ink);background:#fff;border:2px solid var(--ink);border-radius:16px;padding:18px 16px;margin:0 0 14px;min-height:88px}
+a.big.pri{background:var(--acc);border-color:var(--acc);color:#fff}
+a.big:active{transform:scale(.99)}
+a.big .ic{font-size:34px;flex:none}
+a.big b{display:block;font-size:20px}
+a.big span.d{display:block;font-size:14.5px;opacity:.85;margin-top:3px}
+#installBtn{display:none;margin:10px auto 0;font:inherit;font-weight:700;padding:12px 18px;border-radius:12px;border:2px solid #9ca3af;background:#fff;color:#374151}
+footer{margin-top:auto;text-align:center;color:var(--muted);font-size:13px;padding-top:24px}
+</style>
+</head>
+<body>
+<main>
+  <img class="logo" src="icons/logo.png" alt="Drywall Enterprise General Contractors">
+  <h1>Firmas – Drywall Enterprise</h1>
+  <p class="sub">Elige qué quieres hacer</p>
+  <a class="big pri" href="hoja.html"><span class="ic">📋</span><span><b>Hoja de firmas</b><span class="d">Supplemental Sign-In Sheet · Daily Pre-Task Planning</span></span></a>
+  <a class="big" href="documento.html"><span class="ic">✍️</span><span><b>Firmar otro documento</b><span class="d">Abre un PDF, imagen o foto y añade firmas, nombres y fechas</span></span></a>
+  <button id="installBtn">⬇️ Instalar app en este teléfono</button>
+  <footer>Funciona sin internet una vez abierta. Los datos se quedan en este teléfono.</footer>
+</main>
+<script>
+if('serviceWorker' in navigator && location.protocol!=='file:'){
+  window.addEventListener('load',function(){navigator.serviceWorker.register('./sw.js',{scope:'./'}).catch(function(e){console.warn('SW',e);});});
+}
+var deferred=null,ib=document.getElementById('installBtn');
+window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();deferred=e;ib.style.display='block';});
+ib.onclick=function(){if(!deferred)return;deferred.prompt();deferred.userChoice.finally(function(){deferred=null;ib.style.display='none';});};
+window.addEventListener('appinstalled',function(){ib.style.display='none';});
+</script>
+</body>
+</html>
