@@ -1,5 +1,5 @@
 /* Service worker – Firmas Drywall Enterprise (offline) */
-const CACHE = 'firmax-v10';
+const CACHE = 'firmax-v11';
 // Imprescindibles: si falla alguno, la instalación falla
 const CORE = [
  "./",
@@ -15,6 +15,12 @@ const CORE = [
  "./icons/apple-touch-icon.png",
  "./icons/logo.png",
  "./icons/firmas-logo.png",
+ "./icons/rot/0.png",
+ "./icons/rot/1.png",
+ "./icons/rot/2.png",
+ "./icons/rot/3.png",
+ "./icons/rot/4.png",
+ "./icons/rot/5.png",
  "./lib/pdf-lib.min.js",
  "./lib/pdfjs/pdf.min.mjs",
  "./lib/pdfjs/pdf.worker.min.mjs"

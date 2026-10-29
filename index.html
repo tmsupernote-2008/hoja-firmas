@@ -31,7 +31,7 @@ footer{margin-top:auto;text-align:center;color:var(--muted);font-size:13px;paddi
 </head>
 <body>
 <main>
-  <img class="logo" src="icons/firmas-logo.png" alt="Firmax">
+  <img class="logo" id="logoRot" src="icons/firmas-logo.png" alt="Firmax">
   <h1>Firmax</h1>
   <p class="sub">Elige qué quieres hacer</p>
   <a class="big pri" href="hoja.html"><span class="ic">📋</span><span><b>Hoja de firmas</b><span class="d">Supplemental Sign-In Sheet · Daily Pre-Task Planning</span></span></a>
@@ -40,6 +40,7 @@ footer{margin-top:auto;text-align:center;color:var(--muted);font-size:13px;paddi
   <footer>Funciona sin internet una vez abierta. Los datos se quedan en este teléfono.</footer>
 </main>
 <script>
+(function(){var d=new Date(),n=Math.floor(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())/864e5)%6;document.getElementById('logoRot').src='icons/rot/'+n+'.png';})();
 if('serviceWorker' in navigator && location.protocol!=='file:'){
   window.addEventListener('load',function(){navigator.serviceWorker.register('./sw.js',{scope:'./'}).catch(function(e){console.warn('SW',e);});});
 }
