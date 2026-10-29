@@ -253,7 +253,9 @@ var DEFAULT_NAMES={
 };
 /* ============================================================================ */
 var MEMF=['project','location','prepared','supervisor','task'];
-var K_MEM='dwe_hdr_mem_v1',K_HIST='dwe_hdr_hist_v1',K_SUB='dwe_last_sub_v1',K_LISTS='dwe_name_lists_v1';
+var K_MEM='dwe_hdr_mem_v1',K_HIST='dwe_hdr_hist_v1',K_SUB='dwe_last_sub_v1',K_LISTS='dwe_name_lists_v1',K_ROLES='dwe_roles_v1';
+var DEFAULT_ROLES=['Hanger','Finisher','Caulking','Framer'];
+function getRoles(){var r=lsGetJ(K_ROLES,null);if(!Array.isArray(r)){r=DEFAULT_ROLES.slice();lsSetJ(K_ROLES,r);}return r;}
 function lsGetJ(k,d){try{var v=JSON.parse(localStorage.getItem(k));return v==null?d:v;}catch(e){return d;}}
 function lsSetJ(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
 function getLists(){
@@ -336,7 +338,7 @@ function rowHTML(i){
   '<button type="button" class="subBtn'+(r.sub?'':' empty')+'" data-act="sub" data-i="'+i+'">'+(r.sub?esc(r.sub):'Elegir… / Choose…')+'</button>'+
   '<label class="f">SIGNATURE / <i>FIRMA</i></label>'+
   '<div class="sig'+(r.sig?' has':'')+'" data-act="sign" data-i="'+i+'" role="button" tabindex="0">'+(r.sig?'<img alt="firma" src="'+r.sig+'">':'✍️ Toca para firmar / Tap to sign')+'</div>'+
-  '<div class="two"><div><label class="f">ROLE / POSITION – <i>ROL / PUESTO</i></label><input type="text" data-k="role" data-i="'+i+'" value="'+esc(r.role)+'" autocomplete="off"></div>'+
+  '<div class="two"><div><label class="f">ROLE / POSITION – <i>ROL / PUESTO</i></label><div class="nameWrap"><input type="text" data-k="role" data-i="'+i+'" value="'+esc(r.role)+'" autocomplete="off"><button class="lbtn" type="button" data-act="roles" data-i="'+i+'" aria-label="Elegir rol">🔽</button></div></div>'+
   '<div><label class="f">TIME IN / <i>ENTRADA</i></label><input type="time" data-k="time" data-i="'+i+'" value="'+esc(r.time)+'"></div></div>'+
   '<label class="f">SIGN OUT / <i>FIRMA DE SALIDA</i></label>'+
   '<div class="sig'+(r.sigO?' has':'')+'" data-act="signout" data-i="'+i+'" role="button" tabindex="0">'+(r.sigO?'<img alt="firma de salida" src="'+r.sigO+'">':'🚪 Toca para firmar salida / Tap to sign out')+'</div>'+
@@ -356,6 +358,7 @@ $('rows').addEventListener('click',function(e){
   var t=e.target.closest('[data-act]');if(!t)return;var i=+t.getAttribute('data-i');
   if(t.getAttribute('data-act')==='sign')openSig(i);
   else if(t.getAttribute('data-act')==='sub')openSubPicker(i);
+  else if(t.getAttribute('data-act')==='roles')openRolePicker(i);
   else if(t.getAttribute('data-act')==='signout'){var rr=state.rows[i];if(!rr.sig&&!rr.name){toast('Primero firme la entrada / Sign in first');return;}openSig(i,true);}
   else if(t.getAttribute('data-act')==='names')openNamePicker(i);
   else if(t.getAttribute('data-act')==='clear'){var r=state.rows[i];if((r.name||r.sig||r.sigO||r.role||r.time||r.out||r.sub)&&!confirm('¿Vaciar la fila #'+(i+1)+'?'))return;state.rows[i]=emptyRow();renderRow(i);save();}
@@ -388,6 +391,21 @@ function openSubPicker(i){
   $('pkFoot').innerHTML='<button class="btn ghost" data-pk="close" style="grid-column:1/-1">Cancelar</button>';
   openPick();
 }
+function openRolePicker(i){
+  pk={mode:'roles',row:i};var r=state.rows[i],L=getRoles();
+  $('pkTitle').innerHTML='Rol / Puesto – fila #'+(i+1)+'<small>Role / Position</small>';$('pkTabs').innerHTML='';
+  $('pkBody').innerHTML=(L.length?L.map(function(n){return '<button class="opt'+(r.role===n?' on':'')+'" data-v="'+esc(n)+'">'+esc(n)+(r.role===n?' <small>✔</small>':'')+'</button>';}).join(''):'<div class="pkEmpty">No hay roles guardados. Toca “Editar roles” para agregarlos.</div>')+
+    (r.role?'<button class="opt" data-v="" style="color:#6b7280">— Quitar / None —</button>':'');
+  $('pkFoot').innerHTML='<button class="btn ghost" data-pk="close">Cancelar</button><button class="btn" data-pk="redit">✏️ Editar roles</button>';
+  openPick();
+}
+function openRoleEditor(){
+  var L=getRoles();pk.mode='roleedit';
+  $('pkTitle').innerHTML='Editar roles<small>Agrega o borra puestos de la lista</small>';$('pkTabs').innerHTML='';
+  $('pkBody').innerHTML=(L.length?L.map(function(n,k){return '<div class="edRow"><span>'+esc(n)+'</span><button data-rdel="'+k+'">Borrar</button></div>';}).join(''):'<div class="pkEmpty">Sin roles todavía.</div>')+
+    '<div class="edAdd"><input type="text" id="rIn" placeholder="Nuevo rol…" autocapitalize="words" autocomplete="off"><button data-radd="1">＋ Agregar</button></div>';
+  $('pkFoot').innerHTML='<button class="btn" data-pk="rdone" style="grid-column:1/-1">Listo</button>';
+}
 function usedNames(except){var m={};state.rows.forEach(function(r,j){if(j!==except&&r.name.trim())m[r.name.trim().toLowerCase()]=j+1;});return m;}
 function openNamePicker(i,tab){
   var r=state.rows[i];
@@ -404,12 +422,20 @@ function openNamePicker(i,tab){
 }
 $('pickModal').addEventListener('click',function(e){
   if(e.target===$('pickModal')){closePick();return;}
+  var rb=e.target.closest('[data-rdel],[data-radd]');
+  if(rb&&pk.mode==='roleedit'){var RL=getRoles();
+    if(rb.hasAttribute('data-rdel')){var k=+rb.getAttribute('data-rdel');if(!confirm('¿Borrar '+RL[k]+' de la lista de roles?'))return;RL.splice(k,1);lsSetJ(K_ROLES,RL);openRoleEditor();}
+    else{var inp=$('rIn'),v0=inp.value.trim().replace(/\s+/g,' ');if(!v0){inp.focus();return;}
+      if(RL.some(function(x){return x.toLowerCase()===v0.toLowerCase();})){toast('Ya está en la lista');return;}
+      RL.push(v0);lsSetJ(K_ROLES,RL);openRoleEditor();$('rIn').focus();toast('Agregado: '+v0);}
+    return;}
   var b=e.target.closest('[data-pk],[data-tab],[data-v]');if(!b)return;
   var i=pk.row,r=state.rows[i];
-  if(b.hasAttribute('data-pk')){var a=b.getAttribute('data-pk');if(a==='close')closePick();else if(a==='edit'){var t=pk.tab;closePick();openEditor(t,i);}return;}
+  if(b.hasAttribute('data-pk')){var a=b.getAttribute('data-pk');if(a==='close')closePick();else if(a==='redit'){openRoleEditor();}else if(a==='rdone'){openRolePicker(i);}else if(a==='edit'){var t=pk.tab;closePick();openEditor(t,i);}return;}
   if(b.hasAttribute('data-tab')){openNamePicker(i,b.getAttribute('data-tab'));return;}
   var v=b.getAttribute('data-v');
   if(pk.mode==='sub'){r.sub=v;if(v)lsSetJ(K_SUB,v);}
+  else if(pk.mode==='roles'){r.role=v;}
   else{
     if(b.hasAttribute('data-used')&&!confirm(v+' ya está en la fila #'+b.getAttribute('data-used')+'. ¿Usarlo también aquí?'))return;
     r.name=v;if(!r.sub)r.sub=pk.tab;
@@ -435,6 +461,7 @@ $('edBody').addEventListener('click',function(e){
     if(L[s2].some(function(x){return x.toLowerCase()===v.toLowerCase();})){toast('Ya está en la lista');return;}
     L[s2].push(v);lsSetJ(K_LISTS,L);openEditor(s2,edReturn);var ni=$('edIn'+si);if(ni)ni.focus();toast('Agregado: '+v);}
 });
+$('pickModal').addEventListener('keydown',function(e){if(e.key==='Enter'&&e.target.id==='rIn'){e.preventDefault();var b=document.querySelector('[data-radd]');if(b)b.click();}});
 $('edBody').addEventListener('keydown',function(e){if(e.key==='Enter'&&e.target.id&&e.target.id.indexOf('edIn')===0){e.preventDefault();var b=document.querySelector('[data-add="'+e.target.id.slice(4)+'"]');if(b)b.click();}});
 $('edDone').onclick=function(){$('editModal').classList.remove('open');document.body.style.overflow='';if(edReturn>=0){var i=edReturn;edReturn=-1;openNamePicker(i);}};
 $('editNames').onclick=function(){openEditor(null,-1);};
