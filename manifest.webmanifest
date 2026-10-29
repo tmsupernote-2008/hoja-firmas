@@ -1,5 +1,5 @@
 {
-  "name": "Hoja de Firmas – Drywall Enterprise",
+  "name": "Firmas",
   "short_name": "Firmas",
   "description": "Hoja digital de firmas (Daily Pre-Task Planning) con generación de PDF.",
   "id": "./",
@@ -8,7 +8,7 @@
   "display": "standalone",
   "orientation": "portrait",
   "lang": "es",
-  "theme_color": "#1f2937",
+  "theme_color": "#2B2F33",
   "background_color": "#ffffff",
   "icons": [
     {"src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},

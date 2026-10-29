@@ -1,5 +1,5 @@
 /* Service worker – Firmas Drywall Enterprise (offline) */
-const CACHE = 'firmas-885f99be';
+const CACHE = 'firmas-v2-logo2';
 // Imprescindibles: si falla alguno, la instalación falla
 const CORE = [
  "./",
@@ -14,6 +14,7 @@ const CORE = [
  "./icons/maskable-512.png",
  "./icons/apple-touch-icon.png",
  "./icons/logo.png",
+ "./icons/firmas-logo.png",
  "./lib/pdf-lib.min.js",
  "./lib/pdfjs/pdf.min.mjs",
  "./lib/pdfjs/pdf.worker.min.mjs"
