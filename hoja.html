@@ -466,30 +466,30 @@ function openSubLinkPanel(){
   pk={mode:'sublink',row:-1};
   $('pkTitle').innerHTML='Enlace para un sub<small>Incluye la ubicación (media milla), el sub y su lista de nombres</small>';$('pkTabs').innerHTML='';
   var st='width:100%;font:inherit;font-size:16px;padding:10px;border:1.5px solid #cbd5e1;border-radius:10px;background:#fff;margin-bottom:10px';
-  $('pkBody').innerHTML='<label class="f">SUBCONTRATISTA</label><select id="slSub" style="'+st+'">'+SUBS.map(function(x){return '<option>'+esc(x)+'</option>';}).join('')+'</select>'+
+  $('pkBody').innerHTML='<label class="f">ENVIAR A (NÚMERO O CORREO DEL SUB)</label><input type="text" id="slTo" placeholder="Ej.: 913 555 0123 o nombre@correo.com" inputmode="email" autocomplete="off" autocapitalize="off" style="width:100%;font:inherit;font-size:16px;padding:10px;border:1.5px solid #cbd5e1;border-radius:10px;margin-bottom:10px"><label class="f">SUBCONTRATISTA</label><select id="slSub" style="'+st+'">'+SUBS.map(function(x){return '<option>'+esc(x)+'</option>';}).join('')+'</select>'+
    '<label class="f">VÁLIDO POR</label><select id="slDays" style="'+st+'"><option value="1">1 día</option><option value="7" selected>7 días</option><option value="30">30 días</option><option value="0">Sin vencimiento</option></select>'+
    '<label class="f">FOTO AL FIRMAR</label><select id="slPh" style="'+st+'"><option value="1" selected>Sí, con foto</option><option value="0">Sin foto</option></select>'+
    '<label class="f">DATOS DE LA OBRA</label><select id="slLock" style="'+st+'"><option value="1" selected>Bloqueados (proyecto, ubicación, preparado por)</option><option value="0">Editables</option></select>'+
-   '<div class="note">El enlace usa la ubicación fijada y los datos de esta hoja. Fija primero la ubicación del proyecto.</div>';
-  $('pkFoot').innerHTML='<button class="btn ghost" data-pk="close">Cancelar</button><button class="btn" data-pk="slmake">📨 Crear y compartir</button>';
+   '<div class="note">Si dejas el espacio vacío, eliges cómo compartirlo (WhatsApp, etc.). El enlace usa la ubicación fijada y los datos de esta hoja. Fija primero la ubicación del proyecto.</div>';
+  $('pkFoot').innerHTML='<button class="btn ghost" data-pk="close">Cancelar</button><button class="btn" data-pk="slmake">📨 Crear y enviar</button>';
   openPick();
 }
 function makeSubLink(){
   var g=getGeo();if(!g){toast('Primero fija la ubicación del proyecto');return;}
-  var sub=$('slSub').value,days=+$('slDays').value,ph=+$('slPh').value,lk=+$('slLock').value;
+  var to=($('slTo').value||'').trim(),sub=$('slSub').value,days=+$('slDays').value,ph=+$('slPh').value,lk=+$('slLock').value;
   var cfg={s:sub,la:+g.lat.toFixed(6),lo:+g.lon.toFixed(6),ph:ph,lk:lk,p:state.h.project||'',l:state.h.location||'',pr:state.h.prepared||'',sv:state.h.supervisor||'',n:(getLists()[sub]||[]).slice(0,60)};
   if(days>0)cfg.ex=Date.now()+days*86400000;
   var b64=btoa(unescape(encodeURIComponent(JSON.stringify(cfg)))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
   var u=new URL('./?subl='+b64,location.href).href;
-  logAct('Creó un enlace para '+sub+(days>0?' (vale '+days+' d)':' (sin vencimiento)')+(ph?'':' sin foto'));
+  logAct('Creó un enlace para '+sub+(to?' → '+to:'')+(days>0?' (vale '+days+' d)':' (sin vencimiento)')+(ph?'':' sin foto'));
   closePick();
-  shareText('Firmax – '+sub,'Abre este enlace en tu teléfono para firmar las entradas y salidas de tu gente en la obra (solo se firma cerca de la obra):',u,'Enlace copiado para '+sub);
+  sendTo(to,'Firmax – '+sub,'Abre este enlace en tu teléfono para firmar las entradas y salidas de tu gente en la obra (solo se firma cerca de la obra):',u,'Enlace copiado para '+sub);
 }
 function openSupPanel(){
   pk={mode:'sups',row:-1};var SL=getSups();
   $('pkTitle').innerHTML='Superintendentes<small>Menos acceso que tú: fijan ubicación, editan nombres y roles. No quitan la restricción ni crean otros.</small>';$('pkTabs').innerHTML='';
   $('pkBody').innerHTML=(SL.length?SL.map(function(x,k){return '<div class="edRow"><span>'+esc(x.name)+'</span><button data-sdel="'+k+'">Quitar</button></div>';}).join(''):'<div class="pkEmpty">Sin superintendentes todavía.</div>')+
-    '<div style="margin-top:10px"><input type="text" id="sName" placeholder="Nombre del superintendente" autocapitalize="words" autocomplete="off" style="margin-bottom:8px"><input type="tel" id="sPin" placeholder="PIN (6 a 12 números)" inputmode="numeric" autocomplete="off" style="margin-bottom:8px"><button class="btn" data-sadd="1" style="width:100%">＋ Crear y compartir enlace</button></div>';
+    '<div style="margin-top:10px"><input type="text" id="sName" placeholder="Nombre del superintendente" autocapitalize="words" autocomplete="off" style="margin-bottom:8px"><input type="tel" id="sPin" placeholder="PIN (6 a 12 números)" inputmode="numeric" autocomplete="off" style="margin-bottom:8px"><input type="text" id="sTo" placeholder="Enviar a: número o correo (opcional)" inputmode="email" autocomplete="off" autocapitalize="off" style="margin-bottom:8px"><button class="btn" data-sadd="1" style="width:100%">＋ Crear y enviar enlace</button></div>';
   $('pkFoot').innerHTML='<button class="btn ghost" data-pk="close" style="grid-column:1/-1">Cerrar</button>';
   openPick();
 }
@@ -514,13 +514,13 @@ $('pickModal').addEventListener('click',function(e){
     if(sb.hasAttribute('data-sdel')){var SL=getSups(),k2=+sb.getAttribute('data-sdel'),sp=SL[k2];if(!sp||!confirm('¿Quitar a '+sp.name+' de este teléfono? Para quitarle el acceso en su teléfono, se te ofrece un enlace de revocación.'))return;
       SL.splice(k2,1);lsSetJ(K_SUPS,SL);logAct('Quitó al superintendente '+sp.name);var ru=new URL('./?rev='+sp.hash,location.href).href;openSupPanel();
       if(confirm('¿Compartir ahora el enlace para revocar el acceso en el teléfono de '+sp.name+'?'))shareText('Firmax – revocar acceso','Abre este enlace para quitar tu acceso de superintendente:',ru,'Enlace copiado');}
-    else{var nm=($('sName').value||'').trim().replace(/\s+/g,' '),pn=($('sPin').value||'').trim();
+    else{var nm=($('sName').value||'').trim().replace(/\s+/g,' '),pn=($('sPin').value||'').trim(),to2=($('sTo').value||'').trim();
       if(!nm){$('sName').focus();return;}if(!/^\d{6,12}$/.test(pn)){toast('El PIN debe tener de 6 a 12 números');$('sPin').focus();return;}
       if(!(window.crypto&&crypto.subtle)){toast('Este navegador no permite crear PIN');return;}
       var SL2=getSups();if(SL2.some(function(x){return x.name.toLowerCase()===nm.toLowerCase();})){toast('Ya existe un superintendente con ese nombre');return;}
-      sha256hex('firmax-sup|'+nm.toLowerCase()+'|'+pn).then(function(h){SL2.push({name:nm,hash:h});lsSetJ(K_SUPS,SL2);logAct('Creó al superintendente '+nm);
+      sha256hex('firmax-sup|'+nm.toLowerCase()+'|'+pn).then(function(h){SL2.push({name:nm,hash:h});lsSetJ(K_SUPS,SL2);logAct('Creó al superintendente '+nm+(to2?' → '+to2:''));
         var u2=new URL('./?sup='+encodeURIComponent(nm)+','+h,location.href).href;openSupPanel();
-        shareText('Firmax – superintendente','Abre este enlace en tu teléfono para activar tu acceso de superintendente a Firmax. Tu PIN te lo da el administrador:',u2,'Enlace copiado: envíaselo a '+nm);});}
+        sendTo(to2,'Firmax – superintendente','Abre este enlace en tu teléfono para activar tu acceso de superintendente a Firmax. Tu PIN te lo da el administrador:',u2,'Enlace copiado: envíaselo a '+nm);});}
     return;}
   var rb=e.target.closest('[data-rdel],[data-radd]');
   if(rb&&pk.mode==='roleedit'){var RL=getRoles();
@@ -647,6 +647,14 @@ function shareText(title,text,url,okmsg){
   if(navigator.share){navigator.share(url?{title:title,text:text,url:url}:{title:title,text:text}).catch(function(){});}
   else if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(url||text).then(function(){toast(okmsg||'Copiado');},function(){prompt('Copia esto:',url||text);});}
   else prompt('Copia esto:',url||text);}
+function sendTo(dest,title,text,url,okmsg){
+  dest=(dest||'').trim();
+  if(!dest){shareText(title,text,url,okmsg);return;}
+  var msg=text+'\n'+url,link;
+  if(dest.indexOf('@')>0){link='mailto:'+encodeURIComponent(dest)+'?subject='+encodeURIComponent(title)+'&body='+encodeURIComponent(msg);}
+  else{var dg=dest.replace(/[^\d+]/g,'');if(dg.replace(/\D/g,'').length<7){toast('Revisa el número o el correo');return;}link='sms:'+dg+'?&body='+encodeURIComponent(msg);}
+  if(navigator.clipboard&&navigator.clipboard.writeText){try{navigator.clipboard.writeText(url);}catch(e){}}
+  location.href=link;toast('Se abre tu '+(dest.indexOf('@')>0?'correo':'mensaje')+' para '+dest+'. Toca enviar.');}
 function admUI(){var a=admInfo(),g=isGeneral();
   $('geoBox').style.display=a?'block':'none';
   $('geoOff').style.display=(a&&g&&getGeo())?'block':'none';
