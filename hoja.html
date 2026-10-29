@@ -158,7 +158,7 @@ input[type=time]{padding:10px 8px;font-size:17px}
     <div class="geo" id="geoBox" style="display:none">
       <label class="f">📍 UBICACIÓN PARA FIRMAR / <i>SIGNING LOCATION</i></label>
       <div class="geoSt" id="geoSt"></div>
-      <div class="geoBtns"><button type="button" class="btn" id="geoSet">📍 Fijar ubicación del proyecto aquí</button><button type="button" class="btn ghost" id="geoOff">Quitar restricción</button><button type="button" class="btn" id="geoLink">🔗 Compartir enlace de la obra</button></div>
+      <div class="geoBtns"><button type="button" class="btn" id="geoSet">📍 Fijar ubicación del proyecto aquí</button><button type="button" class="btn ghost" id="geoOff">Quitar restricción</button><button type="button" class="btn" id="geoLink">🔗 Compartir enlace de la obra</button><button type="button" class="btn" id="logBtn">🧾 Registro de cambios</button><button type="button" class="btn" id="supBtn" style="display:none">👥 Superintendentes</button></div>
       <div class="note">Cuando está activa, solo se puede firmar a media milla (0.5 mi, unos 800 m) o menos del punto fijado. Fíjala estando en la obra. Comparte el enlace de la obra para que los demás bajen la app con esta restricción ya puesta; ellos no pueden verla ni cambiarla.</div>
     </div>
     <datalist id="dl_project"></datalist><datalist id="dl_location"></datalist><datalist id="dl_prepared"></datalist><datalist id="dl_supervisor"></datalist>
@@ -255,10 +255,18 @@ input[type=time]{padding:10px 8px;font-size:17px}
 <div class="busy" id="busy">Generando PDF…</div>
 <div class="toast" id="toast"></div>
 
-<script>(function(){try{var m=/[?&]obra=(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/.exec(location.search);if(!m)return;var la=+m[1],lo=+m[2];if(Math.abs(la)>90||Math.abs(lo)>180)return;
-var old=JSON.parse(localStorage.getItem('dwe_geofence_v1')||'null');var d=new Date();
-localStorage.setItem('dwe_geofence_v1',JSON.stringify({lat:la,lon:lo,acc:0,locked:true,when:'enlace '+(d.getMonth()+1)+'/'+d.getDate()}));
-if(history.replaceState)history.replaceState(null,'',location.pathname);}catch(e){}})();</script>
+<script>(function(){try{var q=location.search,done=false;
+var m=/[?&]obra=(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/.exec(q);
+if(m){var la=+m[1],lo=+m[2];if(Math.abs(la)<=90&&Math.abs(lo)<=180){var d=new Date();localStorage.setItem('dwe_geofence_v1',JSON.stringify({lat:la,lon:lo,acc:0,locked:true,when:'enlace '+(d.getMonth()+1)+'/'+d.getDate()}));done=true;}}
+var ms=/[?&]sup=([^,&]+),([0-9a-f]{64})/.exec(q);
+if(ms){var nm=decodeURIComponent(ms[1]).slice(0,60),hs=ms[2],L=JSON.parse(localStorage.getItem('dwe_sups_v1')||'[]');if(!Array.isArray(L))L=[];
+ L=L.filter(function(x){return x.hash!==hs&&x.name.toLowerCase()!==nm.toLowerCase();});L.push({name:nm,hash:hs});localStorage.setItem('dwe_sups_v1',JSON.stringify(L));done=true;
+ setTimeout(function(){alert('Listo, '+nm+': tu acceso de superintendente quedó activado en este teléfono. En la hoja de firmas toca "Administrador" y pon tu PIN.');},300);}
+var mr=/[?&]rev=([0-9a-f]{64})/.exec(q);
+if(mr){var L2=JSON.parse(localStorage.getItem('dwe_sups_v1')||'[]');if(Array.isArray(L2)){L2=L2.filter(function(x){return x.hash!==mr[1];});localStorage.setItem('dwe_sups_v1',JSON.stringify(L2));}
+ try{var ad=JSON.parse(localStorage.getItem('dwe_admin_v1')||'null');if(ad&&ad.lvl==='sup')localStorage.removeItem('dwe_admin_v1');}catch(e){}done=true;
+ setTimeout(function(){alert('Tu acceso de superintendente fue revocado en este teléfono.');},300);}
+if(done&&history.replaceState)history.replaceState(null,'',location.pathname);}catch(e){}})();</script>
 <script>
 (function(){
 'use strict';
@@ -415,9 +423,9 @@ function openSubPicker(i){
 function openRolePicker(i){
   pk={mode:'roles',row:i};var r=state.rows[i],L=getRoles();
   $('pkTitle').innerHTML='Rol / Puesto – fila #'+(i+1)+'<small>Role / Position</small>';$('pkTabs').innerHTML='';
-  $('pkBody').innerHTML=(L.length?L.map(function(n){return '<button class="opt'+(r.role===n?' on':'')+'" data-v="'+esc(n)+'">'+esc(n)+(r.role===n?' <small>✔</small>':'')+'</button>';}).join(''):'<div class="pkEmpty">No hay roles guardados. Toca “Editar roles” para agregarlos.</div>')+
+  $('pkBody').innerHTML=(L.length?L.map(function(n){return '<button class="opt'+(r.role===n?' on':'')+'" data-v="'+esc(n)+'">'+esc(n)+(r.role===n?' <small>✔</small>':'')+'</button>';}).join(''):'<div class="pkEmpty">No hay roles guardados. Un administrador puede agregarlos.</div>')+
     (r.role?'<button class="opt" data-v="" style="color:#6b7280">— Quitar / None —</button>':'');
-  $('pkFoot').innerHTML='<button class="btn ghost" data-pk="close">Cancelar</button><button class="btn" data-pk="redit">✏️ Editar roles</button>';
+  $('pkFoot').innerHTML='<button class="btn ghost" data-pk="close"'+(isAdmin()?'':' style="grid-column:1/-1"')+'>Cancelar</button>'+(isAdmin()?'<button class="btn" data-pk="redit">✏️ Editar roles</button>':'');
   openPick();
 }
 function openRoleEditor(){
@@ -426,6 +434,22 @@ function openRoleEditor(){
   $('pkBody').innerHTML=(L.length?L.map(function(n,k){return '<div class="edRow"><span>'+esc(n)+'</span><button data-rdel="'+k+'">Borrar</button></div>';}).join(''):'<div class="pkEmpty">Sin roles todavía.</div>')+
     '<div class="edAdd"><input type="text" id="rIn" placeholder="Nuevo rol…" autocapitalize="words" autocomplete="off"><button data-radd="1">＋ Agregar</button></div>';
   $('pkFoot').innerHTML='<button class="btn" data-pk="rdone" style="grid-column:1/-1">Listo</button>';
+}
+function logText(){var L=getLog().slice().reverse();return 'Registro de cambios – Firmax\n'+(L.length?L.map(function(x){return fmtStamp(x.t)+' – '+x.who+': '+x.act;}).join('\n'):'(sin cambios registrados)');}
+function openLogPanel(){
+  pk={mode:'log',row:-1};var L=getLog().slice().reverse();
+  $('pkTitle').innerHTML='Registro de cambios<small>Solo cambios hechos en este teléfono ('+L.length+')</small>';$('pkTabs').innerHTML='';
+  $('pkBody').innerHTML=L.length?L.map(function(x){return '<div class="edRow" style="display:block"><b>'+esc(x.who)+'</b><br>'+esc(x.act)+'<br><small style="color:#6b7280">'+esc(fmtStamp(x.t))+'</small></div>';}).join(''):'<div class="pkEmpty">Todavía no hay cambios registrados.</div>';
+  $('pkFoot').innerHTML='<button class="btn ghost" data-pk="close"'+(isGeneral()?'':' style="grid-column:1/-1"')+'>Cerrar</button><button class="btn" data-pk="lshare">📤 Compartir registro</button>'+(isGeneral()?'<button class="btn ghost" data-pk="lclear" style="grid-column:1/-1;color:#b91c1c">Borrar registro</button>':'');
+  openPick();
+}
+function openSupPanel(){
+  pk={mode:'sups',row:-1};var SL=getSups();
+  $('pkTitle').innerHTML='Superintendentes<small>Menos acceso que tú: fijan ubicación, editan nombres y roles. No quitan la restricción ni crean otros.</small>';$('pkTabs').innerHTML='';
+  $('pkBody').innerHTML=(SL.length?SL.map(function(x,k){return '<div class="edRow"><span>'+esc(x.name)+'</span><button data-sdel="'+k+'">Quitar</button></div>';}).join(''):'<div class="pkEmpty">Sin superintendentes todavía.</div>')+
+    '<div style="margin-top:10px"><input type="text" id="sName" placeholder="Nombre del superintendente" autocapitalize="words" autocomplete="off" style="margin-bottom:8px"><input type="tel" id="sPin" placeholder="PIN (6 a 12 números)" inputmode="numeric" autocomplete="off" style="margin-bottom:8px"><button class="btn" data-sadd="1" style="width:100%">＋ Crear y compartir enlace</button></div>';
+  $('pkFoot').innerHTML='<button class="btn ghost" data-pk="close" style="grid-column:1/-1">Cerrar</button>';
+  openPick();
 }
 function usedNames(except){var m={};state.rows.forEach(function(r,j){if(j!==except&&r.name.trim())m[r.name.trim().toLowerCase()]=j+1;});return m;}
 function openNamePicker(i,tab){
@@ -437,22 +461,35 @@ function openNamePicker(i,tab){
   var list=getLists()[tab]||[],used=usedNames(i),cur=r.name.trim().toLowerCase();
   $('pkBody').innerHTML=list.length?list.map(function(n){var u=used[n.toLowerCase()];
       return '<button class="opt'+(u?' used':'')+(cur===n.toLowerCase()?' on':'')+'" data-v="'+esc(n)+'"'+(u?' data-used="'+u+'"':'')+'>'+esc(n)+(u?' <small>ya en fila #'+u+'</small>':'')+'</button>';}).join('')
-    :'<div class="pkEmpty">No hay nombres guardados para '+esc(tab)+'. Toca “Editar nombres” para agregarlos, o escribe el nombre a mano.</div>';
-  $('pkFoot').innerHTML='<button class="btn ghost" data-pk="close">Cancelar</button><button class="btn" data-pk="edit">✏️ Editar nombres</button>';
+    :'<div class="pkEmpty">No hay nombres guardados para '+esc(tab)+'. Un administrador puede agregarlos, o escribe el nombre a mano.</div>';
+  $('pkFoot').innerHTML='<button class="btn ghost" data-pk="close"'+(isAdmin()?'':' style="grid-column:1/-1"')+'>Cancelar</button>'+(isAdmin()?'<button class="btn" data-pk="edit">✏️ Editar nombres</button>':'');
   openPick();
 }
 $('pickModal').addEventListener('click',function(e){
   if(e.target===$('pickModal')){closePick();return;}
+  var sb=e.target.closest('[data-sdel],[data-sadd]');
+  if(sb&&pk.mode==='sups'&&isGeneral()){
+    if(sb.hasAttribute('data-sdel')){var SL=getSups(),k2=+sb.getAttribute('data-sdel'),sp=SL[k2];if(!sp||!confirm('¿Quitar a '+sp.name+' de este teléfono? Para quitarle el acceso en su teléfono, se te ofrece un enlace de revocación.'))return;
+      SL.splice(k2,1);lsSetJ(K_SUPS,SL);logAct('Quitó al superintendente '+sp.name);var ru=new URL('./?rev='+sp.hash,location.href).href;openSupPanel();
+      if(confirm('¿Compartir ahora el enlace para revocar el acceso en el teléfono de '+sp.name+'?'))shareText('Firmax – revocar acceso','Abre este enlace para quitar tu acceso de superintendente:',ru,'Enlace copiado');}
+    else{var nm=($('sName').value||'').trim().replace(/\s+/g,' '),pn=($('sPin').value||'').trim();
+      if(!nm){$('sName').focus();return;}if(!/^\d{6,12}$/.test(pn)){toast('El PIN debe tener de 6 a 12 números');$('sPin').focus();return;}
+      if(!(window.crypto&&crypto.subtle)){toast('Este navegador no permite crear PIN');return;}
+      var SL2=getSups();if(SL2.some(function(x){return x.name.toLowerCase()===nm.toLowerCase();})){toast('Ya existe un superintendente con ese nombre');return;}
+      sha256hex('firmax-sup|'+nm.toLowerCase()+'|'+pn).then(function(h){SL2.push({name:nm,hash:h});lsSetJ(K_SUPS,SL2);logAct('Creó al superintendente '+nm);
+        var u2=new URL('./?sup='+encodeURIComponent(nm)+','+h,location.href).href;openSupPanel();
+        shareText('Firmax – superintendente','Abre este enlace en tu teléfono para activar tu acceso de superintendente a Firmax. Tu PIN te lo da el administrador:',u2,'Enlace copiado: envíaselo a '+nm);});}
+    return;}
   var rb=e.target.closest('[data-rdel],[data-radd]');
   if(rb&&pk.mode==='roleedit'){var RL=getRoles();
-    if(rb.hasAttribute('data-rdel')){var k=+rb.getAttribute('data-rdel');if(!confirm('¿Borrar '+RL[k]+' de la lista de roles?'))return;RL.splice(k,1);lsSetJ(K_ROLES,RL);openRoleEditor();}
+    if(rb.hasAttribute('data-rdel')){var k=+rb.getAttribute('data-rdel');if(!confirm('¿Borrar '+RL[k]+' de la lista de roles?'))return;if(!isAdmin())return;logAct('Borró el rol “'+RL[k]+'”');RL.splice(k,1);lsSetJ(K_ROLES,RL);openRoleEditor();}
     else{var inp=$('rIn'),v0=inp.value.trim().replace(/\s+/g,' ');if(!v0){inp.focus();return;}
       if(RL.some(function(x){return x.toLowerCase()===v0.toLowerCase();})){toast('Ya está en la lista');return;}
-      RL.push(v0);lsSetJ(K_ROLES,RL);openRoleEditor();$('rIn').focus();toast('Agregado: '+v0);}
+      if(!isAdmin())return;RL.push(v0);lsSetJ(K_ROLES,RL);logAct('Agregó el rol “'+v0+'”');openRoleEditor();$('rIn').focus();toast('Agregado: '+v0);}
     return;}
   var b=e.target.closest('[data-pk],[data-tab],[data-v]');if(!b)return;
   var i=pk.row,r=state.rows[i];
-  if(b.hasAttribute('data-pk')){var a=b.getAttribute('data-pk');if(a==='close')closePick();else if(a==='redit'){openRoleEditor();}else if(a==='rdone'){openRolePicker(i);}else if(a==='edit'){var t=pk.tab;closePick();openEditor(t,i);}return;}
+  if(b.hasAttribute('data-pk')){var a=b.getAttribute('data-pk');if(a==='close')closePick();else if(a==='lshare'){shareText('Registro de cambios Firmax',logText(),null,'Registro copiado');}else if(a==='lclear'){if(isGeneral()&&confirm('¿Borrar el registro de este teléfono?')){lsSetJ(K_LOG,[]);openLogPanel();}}else if(a==='redit'){openRoleEditor();}else if(a==='rdone'){openRolePicker(i);}else if(a==='edit'){var t=pk.tab;closePick();openEditor(t,i);}return;}
   if(b.hasAttribute('data-tab')){openNamePicker(i,b.getAttribute('data-tab'));return;}
   var v=b.getAttribute('data-v');
   if(pk.mode==='sub'){r.sub=v;if(v)lsSetJ(K_SUB,v);}
@@ -477,15 +514,15 @@ function openEditor(focusSub,ret){
 }
 $('edBody').addEventListener('click',function(e){
   var b=e.target.closest('[data-del],[data-add]');if(!b)return;var L=getLists();
-  if(b.hasAttribute('data-del')){var p=b.getAttribute('data-del').split(':'),s=SUBS[+p[0]],n=L[s][+p[1]];if(!confirm('¿Borrar '+n+' de la lista de '+s+'?'))return;L[s].splice(+p[1],1);lsSetJ(K_LISTS,L);openEditor(s,edReturn);}
+  if(b.hasAttribute('data-del')){var p=b.getAttribute('data-del').split(':'),s=SUBS[+p[0]],n=L[s][+p[1]];if(!isAdmin())return;if(!confirm('¿Borrar '+n+' de la lista de '+s+'?'))return;L[s].splice(+p[1],1);lsSetJ(K_LISTS,L);logAct('Borró el nombre “'+n+'” de la lista de '+s);openEditor(s,edReturn);}
   else{var si=+b.getAttribute('data-add'),s2=SUBS[si],inp=$('edIn'+si),v=inp.value.trim().replace(/\s+/g,' ');if(!v){inp.focus();return;}
     if(L[s2].some(function(x){return x.toLowerCase()===v.toLowerCase();})){toast('Ya está en la lista');return;}
-    L[s2].push(v);lsSetJ(K_LISTS,L);openEditor(s2,edReturn);var ni=$('edIn'+si);if(ni)ni.focus();toast('Agregado: '+v);}
+    if(!isAdmin())return;L[s2].push(v);lsSetJ(K_LISTS,L);logAct('Agregó el nombre “'+v+'” a la lista de '+s2);openEditor(s2,edReturn);var ni=$('edIn'+si);if(ni)ni.focus();toast('Agregado: '+v);}
 });
 $('pickModal').addEventListener('keydown',function(e){if(e.key==='Enter'&&e.target.id==='rIn'){e.preventDefault();var b=document.querySelector('[data-radd]');if(b)b.click();}});
 $('edBody').addEventListener('keydown',function(e){if(e.key==='Enter'&&e.target.id&&e.target.id.indexOf('edIn')===0){e.preventDefault();var b=document.querySelector('[data-add="'+e.target.id.slice(4)+'"]');if(b)b.click();}});
 $('edDone').onclick=function(){$('editModal').classList.remove('open');document.body.style.overflow='';if(edReturn>=0){var i=edReturn;edReturn=-1;openNamePicker(i);}};
-$('editNames').onclick=function(){openEditor(null,-1);};
+$('editNames').onclick=function(){if(!isAdmin())return;openEditor(null,-1);};
 
 /* ---------- signature pad ---------- */
 var pad=$('pad'),pctx=pad.getContext('2d'),strokes=[],cur=null,sigRow=-1,dpr=1,LW=2.8;
@@ -541,7 +578,7 @@ function distM(a,b,c,d){var R=6371000,t=Math.PI/180,dl=(c-a)*t,dn=(d-b)*t,x=Math
 function geoStatus(){if(typeof $('geoOff')==='undefined')return;var g=getGeo(),e=$('geoSt');if(!e)return;
   if(g){e.className='geoSt on';e.textContent='✔ Activa: solo se firma a 0.5 mi del punto fijado'+(g.when?' ('+g.when+')':'')+'.';}
   else{e.className='geoSt off';e.textContent='Sin restricción: se puede firmar desde cualquier lugar.';}
-  $('geoOff').style.display=g?'block':'none';}
+  $('geoOff').style.display=(g&&isGeneral())?'block':'none';}
 function getPos(cb,errcb,hi){if(!navigator.geolocation){errcb({code:0});return;}navigator.geolocation.getCurrentPosition(cb,errcb,{enableHighAccuracy:hi!==false,timeout:20000,maximumAge:hi===false?0:20000});}
 function geoErr(e){return e&&e.code===1?'Permite el acceso a la ubicación del teléfono para poder firmar.':e&&e.code===3?'No se pudo obtener la ubicación a tiempo. Sal a un lugar abierto e inténtalo otra vez.':'No se pudo obtener la ubicación. Activa el GPS e inténtalo otra vez.';}
 function geoCheck(cb){var g=getGeo();if(!g){cb(true);return;}
@@ -550,23 +587,48 @@ function geoCheck(cb){var g=getGeo();if(!g){cb(true);return;}
     if(d-acc>GEO_M){var mi=(d/1609.344);toast('Estás a '+(mi<10?mi.toFixed(1):Math.round(mi))+' mi del proyecto. Solo se puede firmar a 0.5 mi o menos.');cb(false);}
     else{geoLastOk=Date.now();cb(true);}
   },function(e){toast(geoErr(e));cb(false);});}
-$('geoSet').onclick=function(){if(!isAdmin())return;toast('Obteniendo ubicación…');getPos(function(pos){var c=pos.coords,dt=new Date();lsSetJ(K_GEO,{lat:c.latitude,lon:c.longitude,acc:c.accuracy||0,locked:false,when:(dt.getMonth()+1)+'/'+dt.getDate()+' '+nowHM()});geoLastOk=Date.now();geoStatus();toast('Ubicación del proyecto fijada ✔');},function(e){toast(geoErr(e));});};
-$('geoOff').onclick=function(){if(!isAdmin())return;if(!confirm('¿Quitar la restricción de ubicación? Se podrá firmar desde cualquier lugar.'))return;try{localStorage.removeItem(K_GEO);}catch(e){}geoStatus();toast('Restricción quitada');};
+$('geoSet').onclick=function(){if(!isAdmin())return;toast('Obteniendo ubicación…');getPos(function(pos){var c=pos.coords,dt=new Date();lsSetJ(K_GEO,{lat:c.latitude,lon:c.longitude,acc:c.accuracy||0,locked:false,when:(dt.getMonth()+1)+'/'+dt.getDate()+' '+nowHM()});geoLastOk=Date.now();geoStatus();admUI();logAct('Fijó la ubicación del proyecto ('+c.latitude.toFixed(5)+', '+c.longitude.toFixed(5)+')');toast('Ubicación del proyecto fijada ✔');},function(e){toast(geoErr(e));});};
+$('geoOff').onclick=function(){if(!isGeneral()){toast('Solo el administrador general puede quitar la restricción');return;}if(!confirm('¿Quitar la restricción de ubicación? Se podrá firmar desde cualquier lugar.'))return;try{localStorage.removeItem(K_GEO);}catch(e){}logAct('Quitó la restricción de ubicación');geoStatus();admUI();toast('Restricción quitada');};
 /* ---------- modo administrador (solo este teléfono, con PIN) ---------- */
 var K_ADM='dwe_admin_v1',ADM_HASH='3c19dccb306f2f8f8fbb356eaabb695e07ef223e2a9568dc7e9145ccaecc2fde';
-function isAdmin(){try{return localStorage.getItem(K_ADM)==='1';}catch(e){return false;}}
+var K_SUPS='dwe_sups_v1',K_LOG='dwe_changelog_v1';
+function admInfo(){try{var v=localStorage.getItem(K_ADM);if(v==='1')return {lvl:'general',name:'Administrador general'};if(v){var o=JSON.parse(v);if(o&&(o.lvl==='general'||o.lvl==='sup'))return o;}}catch(e){}return null;}
+function isAdmin(){return !!admInfo();}
+function isGeneral(){var a=admInfo();return !!a&&a.lvl==='general';}
+function admName(){var a=admInfo();return a?(a.lvl==='general'?'Administrador general':a.name):'—';}
+function getSups(){var v=lsGetJ(K_SUPS,[]);return Array.isArray(v)?v:[];}
+function getLog(){var v=lsGetJ(K_LOG,[]);return Array.isArray(v)?v:[];}
+function logAct(act,who){var L=getLog();L.push({t:new Date().toISOString(),who:who||admName(),act:act});if(L.length>300)L=L.slice(L.length-300);lsSetJ(K_LOG,L);}
+function fmtStamp(iso){var d=new Date(iso);if(isNaN(d))return iso;return (d.getMonth()+1)+'/'+d.getDate()+'/'+d.getFullYear()+' '+fmtTime(String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'));}
 function sha256hex(t){return crypto.subtle.digest('SHA-256',new TextEncoder().encode(t)).then(function(b){return Array.prototype.map.call(new Uint8Array(b),function(x){return ('0'+x.toString(16)).slice(-2);}).join('');});}
-function admUI(){var a=isAdmin();$('geoBox').style.display=a?'block':'none';$('admBtn').textContent=a?'🔓 Administrador activo (tocar para salir)':'🔒 Administrador';}
+function shareText(title,text,url,okmsg){
+  if(navigator.share){navigator.share(url?{title:title,text:text,url:url}:{title:title,text:text}).catch(function(){});}
+  else if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(url||text).then(function(){toast(okmsg||'Copiado');},function(){prompt('Copia esto:',url||text);});}
+  else prompt('Copia esto:',url||text);}
+function admUI(){var a=admInfo(),g=isGeneral();
+  $('geoBox').style.display=a?'block':'none';
+  $('geoOff').style.display=(a&&g&&getGeo())?'block':'none';
+  $('supBtn').style.display=g?'block':'none';
+  $('editNames').style.display=a?'block':'none';
+  $('admBtn').textContent=a?'🔓 '+(g?'Administrador general':'Superintendente: '+a.name)+' (tocar para salir)':'🔒 Administrador';}
 $('admBtn').onclick=function(){
-  if(isAdmin()){if(confirm('¿Salir del modo administrador en este teléfono?')){try{localStorage.removeItem(K_ADM);}catch(e){}admUI();toast('Modo administrador desactivado');}return;}
-  var pin=prompt('PIN de administrador:');if(pin==null||pin==='')return;
+  var a=admInfo();
+  if(a){if(confirm('¿Salir del modo administrador en este teléfono?')){logAct('Salió del modo administrador');try{localStorage.removeItem(K_ADM);}catch(e){}admUI();geoStatus();toast('Modo administrador desactivado');}return;}
+  var pin=prompt('PIN de administrador o superintendente:');if(pin==null||pin==='')return;pin=pin.trim();
   if(!(window.crypto&&crypto.subtle)){toast('Este navegador no permite verificar el PIN');return;}
-  sha256hex('firmax-admin|'+pin.trim()).then(function(h){if(h===ADM_HASH){try{localStorage.setItem(K_ADM,'1');}catch(e){}admUI();toast('Modo administrador activado ✔');}else toast('PIN incorrecto');});};
-$('geoLink').onclick=function(){var g=getGeo();if(!g){toast('Primero fija la ubicación del proyecto');return;}
-  var u=new URL('./?obra='+g.lat.toFixed(6)+','+g.lon.toFixed(6),location.href).href;
-  if(navigator.share){navigator.share({title:'Firmax – obra',text:'Baja la app Firmax con la ubicación de la obra:',url:u}).catch(function(){});}
-  else if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(u).then(function(){toast('Enlace de la obra copiado');},function(){prompt('Copia este enlace:',u);});}
-  else prompt('Copia este enlace:',u);};
+  sha256hex('firmax-admin|'+pin).then(function(h){
+    if(h===ADM_HASH){try{localStorage.setItem(K_ADM,JSON.stringify({lvl:'general',name:'Administrador general'}));}catch(e){}logAct('Entró como administrador general');admUI();geoStatus();toast('Administrador general activado ✔');return;}
+    var sups=getSups();
+    Promise.all(sups.map(function(x){return sha256hex('firmax-sup|'+x.name.trim().toLowerCase()+'|'+pin);})).then(function(hs){
+      var k=hs.findIndex(function(z,i){return z===sups[i].hash;});
+      if(k<0){toast('PIN incorrecto');return;}
+      try{localStorage.setItem(K_ADM,JSON.stringify({lvl:'sup',name:sups[k].name}));}catch(e){}
+      logAct('Entró como superintendente',sups[k].name);admUI();geoStatus();toast('Hola '+sups[k].name+' ✔');});});};
+$('geoLink').onclick=function(){if(!isAdmin())return;var g=getGeo();if(!g){toast('Primero fija la ubicación del proyecto');return;}
+  var u=new URL('./?obra='+g.lat.toFixed(6)+','+g.lon.toFixed(6),location.href).href;logAct('Compartió el enlace de la obra');
+  shareText('Firmax – obra','Baja la app Firmax con la ubicación de la obra:',u,'Enlace de la obra copiado');};
+$('logBtn').onclick=function(){if(isAdmin())openLogPanel();};
+$('supBtn').onclick=function(){if(isGeneral())openSupPanel();};
 admUI();
 geoStatus();
 var sigOut=false;

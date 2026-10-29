@@ -39,10 +39,18 @@ footer{margin-top:auto;text-align:center;color:var(--muted);font-size:13px;paddi
   <button id="installBtn">⬇️ Instalar app en este teléfono</button>
   <footer>Funciona sin internet una vez abierta. Los datos se quedan en este teléfono.</footer>
 </main>
-<script>(function(){try{var m=/[?&]obra=(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/.exec(location.search);if(!m)return;var la=+m[1],lo=+m[2];if(Math.abs(la)>90||Math.abs(lo)>180)return;
-var old=JSON.parse(localStorage.getItem('dwe_geofence_v1')||'null');var d=new Date();
-localStorage.setItem('dwe_geofence_v1',JSON.stringify({lat:la,lon:lo,acc:0,locked:true,when:'enlace '+(d.getMonth()+1)+'/'+d.getDate()}));
-if(history.replaceState)history.replaceState(null,'',location.pathname);}catch(e){}})();</script>
+<script>(function(){try{var q=location.search,done=false;
+var m=/[?&]obra=(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/.exec(q);
+if(m){var la=+m[1],lo=+m[2];if(Math.abs(la)<=90&&Math.abs(lo)<=180){var d=new Date();localStorage.setItem('dwe_geofence_v1',JSON.stringify({lat:la,lon:lo,acc:0,locked:true,when:'enlace '+(d.getMonth()+1)+'/'+d.getDate()}));done=true;}}
+var ms=/[?&]sup=([^,&]+),([0-9a-f]{64})/.exec(q);
+if(ms){var nm=decodeURIComponent(ms[1]).slice(0,60),hs=ms[2],L=JSON.parse(localStorage.getItem('dwe_sups_v1')||'[]');if(!Array.isArray(L))L=[];
+ L=L.filter(function(x){return x.hash!==hs&&x.name.toLowerCase()!==nm.toLowerCase();});L.push({name:nm,hash:hs});localStorage.setItem('dwe_sups_v1',JSON.stringify(L));done=true;
+ setTimeout(function(){alert('Listo, '+nm+': tu acceso de superintendente quedó activado en este teléfono. En la hoja de firmas toca "Administrador" y pon tu PIN.');},300);}
+var mr=/[?&]rev=([0-9a-f]{64})/.exec(q);
+if(mr){var L2=JSON.parse(localStorage.getItem('dwe_sups_v1')||'[]');if(Array.isArray(L2)){L2=L2.filter(function(x){return x.hash!==mr[1];});localStorage.setItem('dwe_sups_v1',JSON.stringify(L2));}
+ try{var ad=JSON.parse(localStorage.getItem('dwe_admin_v1')||'null');if(ad&&ad.lvl==='sup')localStorage.removeItem('dwe_admin_v1');}catch(e){}done=true;
+ setTimeout(function(){alert('Tu acceso de superintendente fue revocado en este teléfono.');},300);}
+if(done&&history.replaceState)history.replaceState(null,'',location.pathname);}catch(e){}})();</script>
 <script>
 (function(){var d=new Date(),n=Math.floor(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())/864e5)%6;document.getElementById('logoRot').src='icons/rot/'+n+'.png';})();
 if('serviceWorker' in navigator && location.protocol!=='file:'){
