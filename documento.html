@@ -454,7 +454,7 @@ function buildOut(){
       });});
     });
     return chain.then(function(){
-      try{out.setProducer('Drywall Enterprise – Firmas');out.setModificationDate(new Date());}catch(e){}
+      try{out.setProducer('Firmas');out.setModificationDate(new Date());}catch(e){}
       return out.save();
     });
   }).then(function(bytes){
