@@ -50,6 +50,19 @@ var mr=/[?&]rev=([0-9a-f]{64})/.exec(q);
 if(mr){var L2=JSON.parse(localStorage.getItem('dwe_sups_v1')||'[]');if(Array.isArray(L2)){L2=L2.filter(function(x){return x.hash!==mr[1];});localStorage.setItem('dwe_sups_v1',JSON.stringify(L2));}
  try{var ad=JSON.parse(localStorage.getItem('dwe_admin_v1')||'null');if(ad&&ad.lvl==='sup')localStorage.removeItem('dwe_admin_v1');}catch(e){}done=true;
  setTimeout(function(){alert('Tu acceso de superintendente fue revocado en este teléfono.');},300);}
+var mb=/[?&]subl=([A-Za-z0-9_-]+)/.exec(q);
+if(mb){try{var o=JSON.parse(decodeURIComponent(escape(atob(mb[1].replace(/-/g,'+').replace(/_/g,'/')))));
+ if(localStorage.getItem('dwe_admin_v1')){setTimeout(function(){alert('Eres administrador en este teléfono: el enlace de sub no se aplicó.');},300);}
+ else if(o&&o.s&&typeof o.la==='number'&&typeof o.lo==='number'&&Math.abs(o.la)<=90&&Math.abs(o.lo)<=180){
+  var d2=new Date();localStorage.setItem('dwe_geofence_v1',JSON.stringify({lat:o.la,lon:o.lo,acc:0,locked:true,when:'enlace '+(d2.getMonth()+1)+'/'+d2.getDate()}));
+  localStorage.setItem('dwe_subcfg_v1',JSON.stringify({s:String(o.s).slice(0,60),ph:o.ph===0?0:1,lock:o.lk===0?0:1,ex:+o.ex||0}));
+  localStorage.setItem('dwe_last_sub_v1',JSON.stringify(String(o.s)));
+  var mem={};try{mem=JSON.parse(localStorage.getItem('dwe_hdr_mem_v1')||'{}')||{};}catch(e){}
+  mem.project=String(o.p||'').slice(0,120);mem.location=String(o.l||'').slice(0,120);mem.prepared=String(o.pr||'').slice(0,80);mem.supervisor=String(o.sv||'').slice(0,80);
+  localStorage.setItem('dwe_hdr_mem_v1',JSON.stringify(mem));
+  if(Array.isArray(o.n)){var ls={};try{ls=JSON.parse(localStorage.getItem('dwe_name_lists_v1')||'{}')||{};}catch(e){}ls[String(o.s)]=o.n.slice(0,60).map(function(x){return String(x).slice(0,60);});localStorage.setItem('dwe_name_lists_v1',JSON.stringify(ls));}
+  done=true;setTimeout(function(){alert('Listo: Firmax quedó configurada para '+o.s+'. Firma solo cerca de la obra.');},300);}
+ }catch(e){}}
 if(done&&history.replaceState)history.replaceState(null,'',location.pathname);}catch(e){}})();</script>
 <script>
 (function(){var d=new Date(),n=Math.floor(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())/864e5)%6;document.getElementById('logoRot').src='icons/rot/'+n+'.png';})();

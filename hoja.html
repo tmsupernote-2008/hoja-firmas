@@ -154,11 +154,12 @@ input[type=time]{padding:10px 8px;font-size:17px}
     <label class="f" for="h_task">TRABAJO / <i>TASK (Work to be done)</i></label>
     <textarea id="h_task" rows="3" placeholder="Ej.: Instalar drywall en 2do piso, área B…"></textarea>
     <div class="note">Proyecto, ubicación, preparado por, supervisor y trabajo se recuerdan en este teléfono (también al hacer “Nueva hoja”) hasta que los cambies. La fecha se pone en la de hoy al abrir.</div>
+    <div id="subBanner" style="display:none;margin-top:12px;padding:10px 12px;border-radius:10px;background:#e0f2fe;color:#075985;font-size:14px;font-weight:600"></div>
     <div style="margin-top:12px"><button type="button" class="admBtn" id="admBtn">🔒 Administrador</button></div>
     <div class="geo" id="geoBox" style="display:none">
       <label class="f">📍 UBICACIÓN PARA FIRMAR / <i>SIGNING LOCATION</i></label>
       <div class="geoSt" id="geoSt"></div>
-      <div class="geoBtns"><button type="button" class="btn" id="geoSet">📍 Fijar ubicación del proyecto aquí</button><button type="button" class="btn ghost" id="geoOff">Quitar restricción</button><button type="button" class="btn" id="geoLink">🔗 Compartir enlace de la obra</button><button type="button" class="btn" id="logBtn">🧾 Registro de cambios</button><button type="button" class="btn" id="supBtn" style="display:none">👥 Superintendentes</button></div>
+      <div class="geoBtns"><button type="button" class="btn" id="geoSet">📍 Fijar ubicación del proyecto aquí</button><button type="button" class="btn ghost" id="geoOff">Quitar restricción</button><button type="button" class="btn" id="geoLink">🔗 Compartir enlace de la obra</button><button type="button" class="btn" id="subLinkBtn">📨 Enlace para subs</button><button type="button" class="btn" id="logBtn">🧾 Registro de cambios</button><button type="button" class="btn" id="supBtn" style="display:none">👥 Superintendentes</button></div>
       <div class="note">Cuando está activa, solo se puede firmar a media milla (0.5 mi, unos 800 m) o menos del punto fijado. Fíjala estando en la obra. Comparte el enlace de la obra para que los demás bajen la app con esta restricción ya puesta; ellos no pueden verla ni cambiarla.</div>
     </div>
     <datalist id="dl_project"></datalist><datalist id="dl_location"></datalist><datalist id="dl_prepared"></datalist><datalist id="dl_supervisor"></datalist>
@@ -266,6 +267,19 @@ var mr=/[?&]rev=([0-9a-f]{64})/.exec(q);
 if(mr){var L2=JSON.parse(localStorage.getItem('dwe_sups_v1')||'[]');if(Array.isArray(L2)){L2=L2.filter(function(x){return x.hash!==mr[1];});localStorage.setItem('dwe_sups_v1',JSON.stringify(L2));}
  try{var ad=JSON.parse(localStorage.getItem('dwe_admin_v1')||'null');if(ad&&ad.lvl==='sup')localStorage.removeItem('dwe_admin_v1');}catch(e){}done=true;
  setTimeout(function(){alert('Tu acceso de superintendente fue revocado en este teléfono.');},300);}
+var mb=/[?&]subl=([A-Za-z0-9_-]+)/.exec(q);
+if(mb){try{var o=JSON.parse(decodeURIComponent(escape(atob(mb[1].replace(/-/g,'+').replace(/_/g,'/')))));
+ if(localStorage.getItem('dwe_admin_v1')){setTimeout(function(){alert('Eres administrador en este teléfono: el enlace de sub no se aplicó.');},300);}
+ else if(o&&o.s&&typeof o.la==='number'&&typeof o.lo==='number'&&Math.abs(o.la)<=90&&Math.abs(o.lo)<=180){
+  var d2=new Date();localStorage.setItem('dwe_geofence_v1',JSON.stringify({lat:o.la,lon:o.lo,acc:0,locked:true,when:'enlace '+(d2.getMonth()+1)+'/'+d2.getDate()}));
+  localStorage.setItem('dwe_subcfg_v1',JSON.stringify({s:String(o.s).slice(0,60),ph:o.ph===0?0:1,lock:o.lk===0?0:1,ex:+o.ex||0}));
+  localStorage.setItem('dwe_last_sub_v1',JSON.stringify(String(o.s)));
+  var mem={};try{mem=JSON.parse(localStorage.getItem('dwe_hdr_mem_v1')||'{}')||{};}catch(e){}
+  mem.project=String(o.p||'').slice(0,120);mem.location=String(o.l||'').slice(0,120);mem.prepared=String(o.pr||'').slice(0,80);mem.supervisor=String(o.sv||'').slice(0,80);
+  localStorage.setItem('dwe_hdr_mem_v1',JSON.stringify(mem));
+  if(Array.isArray(o.n)){var ls={};try{ls=JSON.parse(localStorage.getItem('dwe_name_lists_v1')||'{}')||{};}catch(e){}ls[String(o.s)]=o.n.slice(0,60).map(function(x){return String(x).slice(0,60);});localStorage.setItem('dwe_name_lists_v1',JSON.stringify(ls));}
+  done=true;setTimeout(function(){alert('Listo: Firmax quedó configurada para '+o.s+'. Firma solo cerca de la obra.');},300);}
+ }catch(e){}}
 if(done&&history.replaceState)history.replaceState(null,'',location.pathname);}catch(e){}})();</script>
 <script>
 (function(){
@@ -293,7 +307,10 @@ function getLists(){
   SUBS.forEach(function(s){if(!Array.isArray(l[s]))l[s]=(DEFAULT_NAMES[s]||[]).slice();});
   return l;
 }
-function lastSub(){var v=lsGetJ(K_SUB,'');return SUBS.indexOf(v)>=0?v:'';}
+var K_SUBCFG='dwe_subcfg_v1';
+function subCfg(){var c=lsGetJ(K_SUBCFG,null);return c&&typeof c==='object'&&c.s&&!isAdmin()?c:null;}
+function subExpired(){var c=subCfg();return !!(c&&c.ex&&Date.now()>c.ex);}
+function lastSub(){var c=subCfg();if(c&&SUBS.indexOf(c.s)>=0)return c.s;var v=lsGetJ(K_SUB,'');return SUBS.indexOf(v)>=0?v:'';}
 
 function todayISO(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 function nowHM(){var d=new Date();return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');}
@@ -321,6 +338,7 @@ function load(){
   var mem=lsGetJ(K_MEM,null);
   if(mem&&typeof mem==='object')MEMF.forEach(function(k){if(typeof mem[k]==='string')state.h[k]=mem[k];});
   else{mem={};MEMF.forEach(function(k){mem[k]=state.h[k]||'';});lsSetJ(K_MEM,mem);}
+  var sc0=subCfg();if(sc0)state.rows.forEach(function(r){if(r.name||r.sig||r.sigO)r.sub=sc0.s;});
   checkDate();
 }
 function inProgress(){return state.rows.some(function(r){return r.name||r.sig||r.sigO;});}
@@ -413,6 +431,7 @@ var pk={mode:'',row:-1,tab:''};
 function openPick(){$('pickModal').classList.add('open');document.body.style.overflow='hidden';}
 function closePick(){$('pickModal').classList.remove('open');document.body.style.overflow='';pk.mode='';}
 function openSubPicker(i){
+  if(subCfg()){toast('El subcontratista lo fija tu enlace: '+subCfg().s);return;}
   pk={mode:'sub',row:i};var r=state.rows[i];
   $('pkTitle').innerHTML='Subcontratista – fila #'+(i+1)+'<small>Subcontractor</small>';$('pkTabs').innerHTML='';
   $('pkBody').innerHTML=SUBS.map(function(s){return '<button class="opt'+(r.sub===s?' on':'')+'" data-v="'+esc(s)+'">'+esc(s)+(r.sub===s?' <small>✔</small>':'')+'</button>';}).join('')+
@@ -443,6 +462,29 @@ function openLogPanel(){
   $('pkFoot').innerHTML='<button class="btn ghost" data-pk="close"'+(isGeneral()?'':' style="grid-column:1/-1"')+'>Cerrar</button><button class="btn" data-pk="lshare">📤 Compartir registro</button>'+(isGeneral()?'<button class="btn ghost" data-pk="lclear" style="grid-column:1/-1;color:#b91c1c">Borrar registro</button>':'');
   openPick();
 }
+function openSubLinkPanel(){
+  pk={mode:'sublink',row:-1};
+  $('pkTitle').innerHTML='Enlace para un sub<small>Incluye la ubicación (media milla), el sub y su lista de nombres</small>';$('pkTabs').innerHTML='';
+  var st='width:100%;font:inherit;font-size:16px;padding:10px;border:1.5px solid #cbd5e1;border-radius:10px;background:#fff;margin-bottom:10px';
+  $('pkBody').innerHTML='<label class="f">SUBCONTRATISTA</label><select id="slSub" style="'+st+'">'+SUBS.map(function(x){return '<option>'+esc(x)+'</option>';}).join('')+'</select>'+
+   '<label class="f">VÁLIDO POR</label><select id="slDays" style="'+st+'"><option value="1">1 día</option><option value="7" selected>7 días</option><option value="30">30 días</option><option value="0">Sin vencimiento</option></select>'+
+   '<label class="f">FOTO AL FIRMAR</label><select id="slPh" style="'+st+'"><option value="1" selected>Sí, con foto</option><option value="0">Sin foto</option></select>'+
+   '<label class="f">DATOS DE LA OBRA</label><select id="slLock" style="'+st+'"><option value="1" selected>Bloqueados (proyecto, ubicación, preparado por)</option><option value="0">Editables</option></select>'+
+   '<div class="note">El enlace usa la ubicación fijada y los datos de esta hoja. Fija primero la ubicación del proyecto.</div>';
+  $('pkFoot').innerHTML='<button class="btn ghost" data-pk="close">Cancelar</button><button class="btn" data-pk="slmake">📨 Crear y compartir</button>';
+  openPick();
+}
+function makeSubLink(){
+  var g=getGeo();if(!g){toast('Primero fija la ubicación del proyecto');return;}
+  var sub=$('slSub').value,days=+$('slDays').value,ph=+$('slPh').value,lk=+$('slLock').value;
+  var cfg={s:sub,la:+g.lat.toFixed(6),lo:+g.lon.toFixed(6),ph:ph,lk:lk,p:state.h.project||'',l:state.h.location||'',pr:state.h.prepared||'',sv:state.h.supervisor||'',n:(getLists()[sub]||[]).slice(0,60)};
+  if(days>0)cfg.ex=Date.now()+days*86400000;
+  var b64=btoa(unescape(encodeURIComponent(JSON.stringify(cfg)))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+  var u=new URL('./?subl='+b64,location.href).href;
+  logAct('Creó un enlace para '+sub+(days>0?' (vale '+days+' d)':' (sin vencimiento)')+(ph?'':' sin foto'));
+  closePick();
+  shareText('Firmax – '+sub,'Abre este enlace en tu teléfono para firmar las entradas y salidas de tu gente en la obra (solo se firma cerca de la obra):',u,'Enlace copiado para '+sub);
+}
 function openSupPanel(){
   pk={mode:'sups',row:-1};var SL=getSups();
   $('pkTitle').innerHTML='Superintendentes<small>Menos acceso que tú: fijan ubicación, editan nombres y roles. No quitan la restricción ni crean otros.</small>';$('pkTabs').innerHTML='';
@@ -454,10 +496,10 @@ function openSupPanel(){
 function usedNames(except){var m={};state.rows.forEach(function(r,j){if(j!==except&&r.name.trim())m[r.name.trim().toLowerCase()]=j+1;});return m;}
 function openNamePicker(i,tab){
   var r=state.rows[i];
-  if(!tab)tab=SUBS.indexOf(r.sub)>=0?r.sub:'Immer P';
+  if(subCfg())tab=subCfg().s;else if(!tab)tab=SUBS.indexOf(r.sub)>=0?r.sub:'Immer P';
   pk={mode:'names',row:i,tab:tab};
   $('pkTitle').innerHTML='Elegir nombre – fila #'+(i+1)+'<small>'+(r.sub?'Lista de '+esc(r.sub):'Elige el subcontratista para ver su lista')+'</small>';
-  $('pkTabs').innerHTML=SUBS.map(function(s){return '<button class="tab'+(s===tab?' on':'')+'" data-tab="'+esc(s)+'">'+esc(s)+'</button>';}).join('');
+  $('pkTabs').innerHTML=subCfg()?'':SUBS.map(function(s){return '<button class="tab'+(s===tab?' on':'')+'" data-tab="'+esc(s)+'">'+esc(s)+'</button>';}).join('');
   var list=getLists()[tab]||[],used=usedNames(i),cur=r.name.trim().toLowerCase();
   $('pkBody').innerHTML=list.length?list.map(function(n){var u=used[n.toLowerCase()];
       return '<button class="opt'+(u?' used':'')+(cur===n.toLowerCase()?' on':'')+'" data-v="'+esc(n)+'"'+(u?' data-used="'+u+'"':'')+'>'+esc(n)+(u?' <small>ya en fila #'+u+'</small>':'')+'</button>';}).join('')
@@ -489,7 +531,7 @@ $('pickModal').addEventListener('click',function(e){
     return;}
   var b=e.target.closest('[data-pk],[data-tab],[data-v]');if(!b)return;
   var i=pk.row,r=state.rows[i];
-  if(b.hasAttribute('data-pk')){var a=b.getAttribute('data-pk');if(a==='close')closePick();else if(a==='lshare'){shareText('Registro de cambios Firmax',logText(),null,'Registro copiado');}else if(a==='lclear'){if(isGeneral()&&confirm('¿Borrar el registro de este teléfono?')){lsSetJ(K_LOG,[]);openLogPanel();}}else if(a==='redit'){openRoleEditor();}else if(a==='rdone'){openRolePicker(i);}else if(a==='edit'){var t=pk.tab;closePick();openEditor(t,i);}return;}
+  if(b.hasAttribute('data-pk')){var a=b.getAttribute('data-pk');if(a==='close')closePick();else if(a==='slmake')makeSubLink();else if(a==='lshare'){shareText('Registro de cambios Firmax',logText(),null,'Registro copiado');}else if(a==='lclear'){if(isGeneral()&&confirm('¿Borrar el registro de este teléfono?')){lsSetJ(K_LOG,[]);openLogPanel();}}else if(a==='redit'){openRoleEditor();}else if(a==='rdone'){openRolePicker(i);}else if(a==='edit'){var t=pk.tab;closePick();openEditor(t,i);}return;}
   if(b.hasAttribute('data-tab')){openNamePicker(i,b.getAttribute('data-tab'));return;}
   var v=b.getAttribute('data-v');
   if(pk.mode==='sub'){r.sub=v;if(v)lsSetJ(K_SUB,v);}
@@ -581,7 +623,7 @@ function geoStatus(){if(typeof $('geoOff')==='undefined')return;var g=getGeo(),e
   $('geoOff').style.display=(g&&isGeneral())?'block':'none';}
 function getPos(cb,errcb,hi){if(!navigator.geolocation){errcb({code:0});return;}navigator.geolocation.getCurrentPosition(cb,errcb,{enableHighAccuracy:hi!==false,timeout:20000,maximumAge:hi===false?0:20000});}
 function geoErr(e){return e&&e.code===1?'Permite el acceso a la ubicación del teléfono para poder firmar.':e&&e.code===3?'No se pudo obtener la ubicación a tiempo. Sal a un lugar abierto e inténtalo otra vez.':'No se pudo obtener la ubicación. Activa el GPS e inténtalo otra vez.';}
-function geoCheck(cb){var g=getGeo();if(!g){cb(true);return;}
+function geoCheck(cb){if(subExpired()){toast('Este enlace venció. Pídele uno nuevo a tu superintendente.');cb(false);return;}var g=getGeo();if(!g){cb(true);return;}
   toast('Verificando ubicación…');
   getPos(function(pos){var c=pos.coords,d=distM(g.lat,g.lon,c.latitude,c.longitude),acc=Math.min(c.accuracy||0,150);
     if(d-acc>GEO_M){var mi=(d/1609.344);toast('Estás a '+(mi<10?mi.toFixed(1):Math.round(mi))+' mi del proyecto. Solo se puede firmar a 0.5 mi o menos.');cb(false);}
@@ -610,6 +652,9 @@ function admUI(){var a=admInfo(),g=isGeneral();
   $('geoOff').style.display=(a&&g&&getGeo())?'block':'none';
   $('supBtn').style.display=g?'block':'none';
   $('editNames').style.display=a?'block':'none';
+  var sc=subCfg();$('admBtn').parentNode.style.display=sc?'none':'block';
+  var bn=$('subBanner');if(bn){if(sc){bn.style.display='block';bn.textContent='Enlace de '+sc.s+(sc.ex?' · válido hasta '+fmtStamp(new Date(sc.ex).toISOString()).split(' ')[0]:'')+(subExpired()?' · VENCIDO':'')+' · firma solo cerca de la obra'+(sc.ph===0?'':' · con foto');}else bn.style.display='none';}
+  ['h_project','h_location','h_prepared','h_supervisor'].forEach(function(id){var e=$(id);if(e)e.readOnly=!!(sc&&sc.lock);});
   $('admBtn').textContent=a?'🔓 '+(g?'Administrador general':'Superintendente: '+a.name)+' (tocar para salir)':'🔒 Administrador';}
 $('admBtn').onclick=function(){
   var a=admInfo();
@@ -627,6 +672,7 @@ $('admBtn').onclick=function(){
 $('geoLink').onclick=function(){if(!isAdmin())return;var g=getGeo();if(!g){toast('Primero fija la ubicación del proyecto');return;}
   var u=new URL('./?obra='+g.lat.toFixed(6)+','+g.lon.toFixed(6),location.href).href;logAct('Compartió el enlace de la obra');
   shareText('Firmax – obra','Baja la app Firmax con la ubicación de la obra:',u,'Enlace de la obra copiado');};
+$('subLinkBtn').onclick=function(){if(isAdmin())openSubLinkPanel();};
 $('logBtn').onclick=function(){if(isAdmin())openLogPanel();};
 $('supBtn').onclick=function(){if(isGeneral())openSupPanel();};
 admUI();
@@ -682,6 +728,7 @@ var sigSaveReal=function(){
   else{r.sig=url;r.sigV=sv;if(!r.time)r.time=nowHM();}
   if(!r.sub&&lastSub())r.sub=lastSub();
   var i=sigRow;var wasOut=sigOut;closeSig();renderRow(i);saveNow();toast(wasOut?'Salida firmada '+fmtTime(r.out)+' ✔':'Firma guardada ✔');
+  if(subCfg()&&subCfg().ph===0)return;
   setTimeout(function(){takePhoto(function(url){if(!url)return;if(wasOut)r.photoO=url;else r.photo=url;renderRow(i);saveNow();toast('Foto guardada 📷');});},700);
 };
 $('sigSave').onclick=sigSaveGuard;
