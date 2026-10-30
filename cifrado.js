@@ -9,7 +9,7 @@
 'use strict';
 var META='dwe_crypto_v1',PEND='dwe_link_pending_v1',BLOB='dwe_enc_blob_',SHEET='dwe_signin_sheet_v1',K_MEM='dwe_hdr_mem_v1',K_LISTS='dwe_name_lists_v1';
 /* datos sensibles (los demás —idioma, geocerca, admin, supers, roles, ajustes de enlaces— se quedan como están) */
-var SENS=[SHEET,K_MEM,'dwe_hdr_hist_v1',K_LISTS,'dwe_changelog_v1','dwe_doc_lastsig','dwe_doc_names','dwe_mail_to'];
+var SENS=[SHEET,K_MEM,'dwe_hdr_hist_v1',K_LISTS,'dwe_changelog_v1','dwe_doc_lastsig','dwe_doc_names','dwe_mail_to','dwe_company_v1'];
 var PFX='FXE1:',ITER=310000,MINLEN=6,LOCKS=[1,2,5,15,30];
 var IMGF=[['sig','sigV'],['sigO','sigOV'],['photo',null],['photoO',null]];
 var T=function(k,p){return window.I18N?window.I18N.t(k,p):k;};

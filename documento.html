@@ -3,7 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#1f2937">
+<meta name="theme-color" content="#111827" data-dark="#0b0f14">
+<meta name="color-scheme" content="light dark">
 <title>Firmax – Documento</title>
 <link rel="manifest" href="manifest.webmanifest">
 <script src="i18n.js"></script>
@@ -77,6 +78,8 @@ input[type=file]{position:absolute;width:1px;height:1px;opacity:0;pointer-events
 .toast{position:fixed;left:50%;bottom:170px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 16px;border-radius:10px;font-size:15px;z-index:90;opacity:0;transition:opacity .25s;pointer-events:none;max-width:90%;text-align:center}
 .toast.show{opacity:1}
 </style>
+<link rel="stylesheet" href="tema.css">
+<script src="tema.js"></script>
 </head>
 <body>
 <header>
@@ -505,7 +508,7 @@ if('serviceWorker' in navigator && location.protocol!=='file:'){
   // warm the cache for pdf.js so PDFs open offline later
   window.addEventListener('load',function(){setTimeout(function(){pdfjs().catch(function(){});},1500);});
 }
-$('langSlot').style.display='flex';$('langSlot').style.gap='6px';$('langSlot').appendChild(window.I18N.button());$('langSlot').appendChild(FXV.lockButton());window.I18N.apply();showStart();
+$('langSlot').style.display='flex';$('langSlot').style.gap='6px';$('langSlot').appendChild(window.I18N.button());$('langSlot').appendChild(window.Tema.button());window.I18N.onChange(window.Tema.refresh);$('langSlot').appendChild(FXV.lockButton());window.I18N.apply();showStart();
 /* cifrado: con un documento abierto, el bloqueo tapa la pantalla sin recargar (el documento no se guarda en el teléfono) */
 FXV.keepOnLock=function(){return !!doc;};
 window.I18N.onChange(function(){relabel();if(doc&&doc.pages.length)showDoc();else showStart();if($('txtModal').classList.contains('open'))$('txtTitle').textContent=pending&&pending.edit?T('d.editText'):T('d.text');});

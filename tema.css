@@ -1,0 +1,141 @@
+/* Firmax – tema compartido: botones, tarjetas y modo oscuro (sin cambiar comportamiento).
+   Se carga después de los estilos de cada página; los estilos inyectados por JS (i18n, cifrado, compartir)
+   se refuerzan con el prefijo "html" para ganar en especificidad. */
+:root{ /* paleta común con Field to Office (mismos colores = mismo significado) */
+  --acc:#ff6b00;--acc-hi:#ff8533;--acc-lo:#e55a00;--on-acc:#111;--acc-soft:#fff1e6;--acc2:#c24400;
+  --ok:#0e8a3e;--on-ok:#fff;--warn:#f5b700;--red:#e0281c;--red-hi:#f03a2e;--blue:#0a66ff;--blue-hi:#2e7dff;
+  --hdr:#111827;--ink:#0f172a;--muted:#5b6675;--line:#d5dbe3;--bg:#eef1f5;--card:#fff;
+  --r:14px;--sh1:0 1px 2px rgba(15,23,42,.06),0 2px 8px rgba(15,23,42,.07);--sh2:0 2px 4px rgba(15,23,42,.08),0 8px 22px rgba(15,23,42,.12);
+  --btnBg:#e3e8ef;--btnHi:#d6dde7;--btnBd:#c5ced9;--btnTx:#0f172a;--ghBd:#c5ced9;--ghTx:#334155;--soft:transparent;--dangerSoft:#fdecea;--focus:rgba(10,102,255,.55);--fld:#fff;--fldBd:#94a3b8}
+html{color-scheme:light dark;-webkit-tap-highlight-color:transparent}
+::selection{background:rgba(255,107,0,.28)}
+
+/* ---------- botones ---------- */
+html .btn,html .fxB,html .shm .b,html a.big,html #cxBtn,html #installBtn,html .outBtn,html .tool,html .opt,html .subBtn,html .lbtn,html .admBtn,html .edAdd button,html .homeLink,html header a,html .i18nBtn,html .fxLockBtn,html .temaBtn,html .i18nPop button,html .tab,html .chip{
+  transition:transform .08s ease,box-shadow .15s ease,background-color .15s ease,border-color .15s ease,filter .15s ease;-webkit-user-select:none;user-select:none}
+html .btn,html .fxB,html .shm .b{border-radius:var(--r);min-height:54px;line-height:1.2;letter-spacing:.1px;box-shadow:var(--sh1);background:var(--btnBg);border-color:var(--btnBd);color:var(--btnTx);text-align:center}
+html .btn.pri,html .fxB.pri,html .shm .b.pri{background:var(--acc);border-color:var(--acc);color:var(--on-acc);box-shadow:0 2px 0 var(--acc-lo),0 6px 16px rgba(255,107,0,.28)}
+html .btn.dark,html .shm .b.dark{background:var(--blue);border-color:var(--blue);color:#fff;box-shadow:0 2px 0 #0047c2,0 6px 14px rgba(10,102,255,.25)}
+html .btn.ghost,html .fxB.gh,html .shm .b.gh{background:var(--soft);border-color:var(--ghBd);color:var(--ghTx);box-shadow:none}
+html .btn.danger,html .fxB.red{background:var(--red);border-color:var(--red);color:#fff;box-shadow:0 2px 0 #a3170e}
+html .btn.ghost.danger{background:var(--dangerSoft);border-color:var(--red);color:var(--red);box-shadow:none}
+@media (hover:hover){
+  html .btn:hover:not(:disabled),html .fxB:hover:not(:disabled),html .shm .b:hover:not(:disabled),html .outBtn:hover,html .tool:hover,html .opt:hover,html .subBtn:hover,html .lbtn:hover,html .admBtn:hover,html .homeLink:hover,html .i18nBtn:hover,html .temaBtn:hover,html .fxLockBtn:hover,html #cxBtn:hover,html #installBtn:hover{filter:brightness(.97);box-shadow:var(--sh2)}
+  html .btn.pri:hover:not(:disabled),html .fxB.pri:hover:not(:disabled),html .shm .b.pri:hover:not(:disabled){background:var(--acc-hi);filter:none}
+  html .btn.dark:hover:not(:disabled),html .shm .b.dark:hover:not(:disabled){background:var(--blue-hi);filter:none}
+  html a.big:hover{box-shadow:var(--sh2);transform:translateY(-1px)}
+}
+html .btn:active:not(:disabled),html .fxB:active:not(:disabled),html .shm .b:active:not(:disabled),html .outBtn:active,html .tool:active,html .opt:active,html .subBtn:active,html .lbtn:active,html .admBtn:active,html .edAdd button:active,html .homeLink:active,html header a:active,html .i18nBtn:active,html .temaBtn:active,html .fxLockBtn:active,html .i18nPop button:active,html .tab:active,html .chip:active,html #cxBtn:active,html #installBtn:active{transform:translateY(1px) scale(.985);filter:brightness(.94);box-shadow:none}
+html a.big:active{transform:translateY(1px) scale(.99)}
+html .btn.pri:active:not(:disabled),html .fxB.pri:active:not(:disabled),html .shm .b.pri:active:not(:disabled){background:var(--acc-lo);box-shadow:none}
+html .btn:disabled,html .fxB:disabled,html .shm .b:disabled{opacity:.5;box-shadow:none;cursor:not-allowed;filter:grayscale(.3)}
+html :is(button,a,input,textarea,select,.sig):focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+html .bar .btn{min-height:52px}
+html .bar .btn.pri{min-height:58px;font-size:19px}
+html .outBtn{border-radius:12px;box-shadow:var(--sh1);border-color:var(--blue);background:#e8f1ff;color:#0047c2}
+html .lbtn,html .subBtn,html .opt,html .admBtn{border-radius:12px}
+html .tab{min-height:40px;padding:8px 14px}
+html .tab.on,html .opt.on,html .tool.on,html .i18nPop button.on{border-color:var(--acc);background:var(--acc-soft);color:var(--acc2)}
+html .tab.on{box-shadow:0 0 0 2px rgba(255,107,0,.15)}
+html .clr{border-radius:10px;min-height:40px}
+html .homeLink,html header a{border-radius:12px;min-height:40px;display:inline-flex;align-items:center}
+html .i18nBtn,html .fxLockBtn,html .temaBtn{border-radius:12px;height:42px;width:46px}
+html .edRow button{border-radius:10px;min-height:40px}
+
+/* ---------- tarjetas y campos ---------- */
+html .card{border-radius:18px;box-shadow:var(--sh1);border-color:#e2e8f0}
+html .card h2:before{content:"";display:inline-block;width:5px;height:19px;border-radius:3px;background:var(--acc);margin-right:8px;vertical-align:-3px}
+html .row{border-radius:14px;box-shadow:var(--sh1);border-color:#e2e8f0}
+html a.big{border-radius:18px;box-shadow:var(--sh1)}
+html a.big.pri{background:var(--acc);border-color:var(--acc);color:var(--on-acc);box-shadow:0 3px 0 var(--acc-lo),0 10px 22px rgba(255,107,0,.25)}
+html .sheet,html .shm .sh,html .fxM .sh{box-shadow:0 -6px 30px rgba(0,0,0,.18)}
+html input[type=text],html input[type=date],html input[type=time],html input[type=email],html input[type=password],html textarea,html .fxIn,html .shm input,html #txtIn{border-radius:12px;transition:border-color .15s,box-shadow .15s}
+html input:focus,html textarea:focus,html .fxIn:focus,html .shm input:focus{outline:none;border-color:var(--acc);box-shadow:0 0 0 4px rgba(255,107,0,.22)}
+html .toast{border-radius:999px;padding:11px 18px;box-shadow:0 8px 24px rgba(0,0,0,.25);font-weight:600}
+html .modal,html .shm,html .fxM{-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px)}
+html header.top{padding-top:calc(12px + env(safe-area-inset-top));border-bottom:4px solid var(--acc)}
+html body>header{border-bottom:4px solid var(--acc)}
+html .row.done{border-left-color:var(--ok)}
+html .num span,html .geoSt.on,html .fxOk{color:var(--ok)}
+html .fxSw input:checked{background:var(--ok)}
+html .fxErr,html .plabel button{color:var(--red)}
+html .edRow button{background:var(--dangerSoft);color:var(--red)}
+html .fxWarn{border-color:var(--red)}
+html .warn,html .shm .warn{background:#fff7d6;border-color:var(--warn);color:#5c4300}
+html .ink.on{outline-color:var(--acc)}
+html .ov.sel{outline-color:var(--blue)}html .ov .h{background:var(--blue)}html .ov .h.del{background:var(--red)}
+html .temaBtn{border:2px solid var(--ink);background:#fff;color:var(--ink)}
+
+.hdrBtns{display:flex;gap:6px;align-items:center}
+/* ---------- compañía (hoja) ---------- */
+.vh{position:absolute!important;width:1px;height:1px;opacity:0;overflow:hidden;pointer-events:none;clip:rect(0 0 0 0)}
+.coBox{display:flex;gap:10px;align-items:stretch}
+.coBox input{flex:1;min-width:0}
+.coPrev{flex:none;width:96px;min-height:50px;border:2px dashed #cbd5e1;border-radius:12px;background:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden;padding:4px;color:#64748b;font-size:12.5px;text-align:center;line-height:1.15}
+.coPrev.has{border-style:solid;border-color:#94a3b8}
+.coPrev img{max-width:100%;max-height:64px;object-fit:contain;display:block}
+.coBtns{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.coBtns .btn{font-size:15.5px;padding:10px 8px;min-height:52px}
+.coBtns #coDel{grid-column:1/-1;min-height:46px}
+.coNote{margin-bottom:4px}
+.coHdr{flex:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;max-width:112px;min-width:56px}
+.coHdr img{max-width:104px;max-height:64px;object-fit:contain;display:block;border-radius:6px}
+.coHdr span{font-family:'SheetC',system-ui,sans-serif;font-weight:700;font-size:14px;line-height:1.05;text-align:center;word-break:break-word;max-width:112px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+
+@media (prefers-reduced-motion:reduce){html *{transition:none!important}}
+
+/* ---------- modo oscuro ---------- */
+/* ---------- modo oscuro (Tema: 🌙 Oscuro, o 🌓 Automático con el teléfono en oscuro) ---------- */
+
+  html[data-theme=dark]{--ink:#f1f5f9;--muted:#a9b4c2;--line:#2e3644;--bg:#0e1116;--card:#1a1f27;--sel:#3b8bff;
+    --acc:#ff7a1a;--acc-hi:#ff9447;--acc-lo:#e86400;--acc-soft:#3a210c;--acc2:#ffb070;--on-acc:#111;
+    --ok:#2fd06f;--on-ok:#052e14;--warn:#ffc933;--red:#ff5246;--red-hi:#ff6d63;--blue:#3b8bff;--blue-hi:#5c9fff;--hdr:#0b0f14;
+    --btnBg:#2a313d;--btnHi:#343c4a;--btnBd:#3c4656;--btnTx:#f1f5f9;--ghBd:#3c4656;--ghTx:#cbd5e1;--dangerSoft:#3d1210;--focus:rgba(92,159,255,.7);--fld:#0b0e13;--fldBd:#4b5565;
+    --sh1:0 1px 2px rgba(0,0,0,.5),0 2px 10px rgba(0,0,0,.35);--sh2:0 6px 18px rgba(0,0,0,.5)}
+  html[data-theme=dark],html[data-theme=dark] body{background:var(--bg);color:var(--ink)}
+  html[data-theme=dark] header.top,html[data-theme=dark] body>header{background:#141a22;border-bottom-color:var(--acc)}
+  html[data-theme=dark] header.top h1 small,html[data-theme=dark] .footer i,html[data-theme=dark] .pledge,html[data-theme=dark] label.f i,html[data-theme=dark] #start p,html[data-theme=dark] #hint,html[data-theme=dark] .inks{color:#cbd5e1}
+  html[data-theme=dark] .pledge b{color:#fff}
+  /* logos siempre sobre fondo claro */
+  html[data-theme=dark] header.top #logoImg,html[data-theme=dark] .coHdr img,html[data-theme=dark] .logo,html[data-theme=dark] .coPrev{background:#fff;border-radius:10px;padding:4px}
+  html[data-theme=dark] .coPrev{border-color:#475569;color:#475569}
+  html[data-theme=dark] .card,html[data-theme=dark] .row{background:var(--card);border-color:var(--line)}
+  html[data-theme=dark] .row{border-left-color:#64748b}html[data-theme=dark] .row.done{border-left-color:var(--ok)}
+  html[data-theme=dark] input[type=text],html[data-theme=dark] input[type=date],html[data-theme=dark] input[type=time],html[data-theme=dark] input[type=email],html[data-theme=dark] input[type=password],html[data-theme=dark] textarea,html[data-theme=dark] .fxIn,html[data-theme=dark] .shm input,html[data-theme=dark] #txtIn,html[data-theme=dark] .edAdd input{background:var(--fld);border-color:var(--fldBd);color:var(--ink)}
+  html[data-theme=dark] input::placeholder,html[data-theme=dark] textarea::placeholder{color:#64748b}
+  html[data-theme=dark] input[type=date]::-webkit-calendar-picker-indicator,html[data-theme=dark] input[type=time]::-webkit-calendar-picker-indicator{filter:invert(1)}
+  html[data-theme=dark] .outBtn{background:#10233a;border-color:var(--blue);color:#b3d4ff}
+  html[data-theme=dark] .clr{color:#94a3b8}
+  html[data-theme=dark] .bar{background:rgba(17,24,33,.96);border-top-color:var(--line);box-shadow:0 -6px 18px rgba(0,0,0,.5)}
+  html[data-theme=dark] .sheet,html[data-theme=dark] .shm .sh,html[data-theme=dark] .fxM .sh,html[data-theme=dark] .fxGate .in,html[data-theme=dark] .i18nPop .in{background:#151c26;color:var(--ink)}
+  html[data-theme=dark] .fxGate{background:#0b1017;color:var(--ink)}
+  html[data-theme=dark] .fxGate p,html[data-theme=dark] .fxSt,html[data-theme=dark] .shm .st{color:#cbd5e1}
+  html[data-theme=dark] .fxNote,html[data-theme=dark] .shm .note,html[data-theme=dark] .i18nPop h4{color:#94a3b8}
+  html[data-theme=dark] .fxSw{border-color:var(--line)}html[data-theme=dark] .fxSw input{background:#475569}html[data-theme=dark] .fxSw input:checked{background:var(--ok)}
+  html[data-theme=dark] .fxWarn{background:#3d1210;border-color:var(--red);color:#ffc2bc}
+  html[data-theme=dark] .fxErr{color:var(--red)}html[data-theme=dark] .fxOk{color:var(--ok)}
+  html[data-theme=dark] .fxM,html[data-theme=dark] .shm{color:var(--ink)}
+  html[data-theme=dark] .mhead{border-bottom-color:var(--line)}html[data-theme=dark] .mfoot,html[data-theme=dark] .pfoot,html[data-theme=dark] .pkFoot{border-top-color:var(--line)}
+  html[data-theme=dark] .i18nBtn,html[data-theme=dark] .fxLockBtn,html[data-theme=dark] .temaBtn,html[data-theme=dark] .homeLink,html[data-theme=dark] body>header a{background:#1e2733;border-color:#475569;color:#f1f5f9}
+  html[data-theme=dark] .i18nPop button{background:#1e2733;border-color:#334155;color:#f1f5f9}
+  html[data-theme=dark] .i18nPop button.on,html[data-theme=dark] .opt.on,html[data-theme=dark] .tab.on,html[data-theme=dark] .tool.on{background:var(--acc-soft);border-color:var(--acc);color:var(--acc2)}
+  html[data-theme=dark] .tab,html[data-theme=dark] .opt,html[data-theme=dark] .subBtn,html[data-theme=dark] .lbtn,html[data-theme=dark] .admBtn,html[data-theme=dark] .tool,html[data-theme=dark] .chip,html[data-theme=dark] .edAdd button{background:#1e2733;border-color:#475569;color:#e5e7eb}
+  html[data-theme=dark] .subBtn.empty{color:#94a3b8}
+  html[data-theme=dark] .edRow{border-bottom-color:var(--line)}html[data-theme=dark] .edRow button{background:var(--dangerSoft);color:var(--red)}
+  html[data-theme=dark] .geo{background:#111821;border-color:#475569}
+  html[data-theme=dark] .geoSt.on{color:var(--ok)}html[data-theme=dark] .geoSt.off{color:#94a3b8}
+  html[data-theme=dark] .warn,html[data-theme=dark] .shm .warn{background:#2b2210;border-color:#a16207;color:#fde68a}
+  html[data-theme=dark] .busy{background:rgba(11,16,23,.8);color:#f1f5f9}
+  html[data-theme=dark] .toast{background:#f1f5f9;color:#0b1017}
+  html[data-theme=dark] a.big:not(.pri){background:#151c26;border-color:#475569;color:var(--ink)}
+  html[data-theme=dark] #cxBtn,html[data-theme=dark] #installBtn{background:#1e2733;border-color:#475569;color:#e5e7eb}
+  html[data-theme=dark] #tools{background:#111821;border-bottom-color:var(--line)}
+  html[data-theme=dark] #prevBody{background:#0f141b}
+  html[data-theme=dark] .thumbs img{border-color:#64748b}
+  /* zonas de firma y páginas: siempre blancas (la tinta es oscura) */
+  html[data-theme=dark] .sig{background:#f8fafc;color:#475569;border-color:#64748b}
+  html[data-theme=dark] .sig.has{background:#fff}
+  html[data-theme=dark] .padwrap,html[data-theme=dark] #padBox,html[data-theme=dark] .page{background:#fff}
+  html[data-theme=dark] #padBox{border-color:#64748b}
+  html[data-theme=dark] .sheet .chk{color:var(--ink)}
+
