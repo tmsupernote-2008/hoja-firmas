@@ -1,11 +1,12 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" data-i18n-doctitle="d.docTitle">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#1f2937">
 <title>Firmax – Documento</title>
 <link rel="manifest" href="manifest.webmanifest">
+<script src="i18n.js"></script>
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <meta name="mobile-web-app-capable" content="yes">
@@ -17,7 +18,7 @@ html,body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-
 body{padding-bottom:calc(150px + env(safe-area-inset-bottom))}
 header{position:sticky;top:0;z-index:20;background:#fff;border-bottom:3px solid var(--ink);padding:10px 12px;display:flex;align-items:center;gap:10px}
 header a{font-weight:700;font-size:15px;color:var(--ink);text-decoration:none;border:2px solid var(--ink);border-radius:10px;padding:6px 10px;flex:none}
-header h1{font-size:18px;margin:0;line-height:1.15;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+header h1{flex:1;min-width:0;font-size:18px;margin:0;line-height:1.15;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 header h1 small{display:block;font-size:13px;color:var(--muted);font-weight:500;overflow:hidden;text-overflow:ellipsis}
 .btn{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;font:inherit;font-weight:700;font-size:17px;padding:13px 12px;border-radius:12px;border:2px solid var(--ink);background:#fff;color:var(--ink);min-height:52px;cursor:pointer;text-align:center}
 .btn.pri{background:var(--acc);border-color:var(--acc);color:#fff}
@@ -78,8 +79,9 @@ input[type=file]{position:absolute;width:1px;height:1px;opacity:0;pointer-events
 </head>
 <body>
 <header>
-  <a href="./">‹ Inicio</a>
-  <h1 id="ttl">Firmar otro documento<small id="sub">PDF, imagen o foto</small></h1>
+  <a href="./" data-i18n="home" data-i18n-aria="homeAria">‹ Inicio</a>
+  <h1 id="ttl"><span data-i18n="idx.doc">Firmar otro documento</span><small id="sub">PDF, imagen o foto</small></h1>
+  <span id="langSlot" style="flex:none"></span>
 </header>
 
 <input type="file" id="fileIn" accept="application/pdf,image/*">
@@ -88,73 +90,73 @@ input[type=file]{position:absolute;width:1px;height:1px;opacity:0;pointer-events
 <input type="file" id="addCamIn" accept="image/*" capture="environment">
 
 <section id="start">
-  <p>Abre el documento que hay que firmar. Después toca la página donde va cada firma, nombre o fecha y guarda el resultado como PDF.</p>
-  <label class="btn pri" for="fileIn">📂 Elegir PDF o imagen</label>
-  <label class="btn" for="camIn">📷 Tomar foto del documento</label>
-  <p class="note">Todo se procesa en este teléfono; no se sube nada a internet.</p>
+  <p data-i18n="d.intro">Abre el documento que hay que firmar. Después toca la página donde va cada firma, nombre o fecha y guarda el resultado como PDF.</p>
+  <label class="btn pri" for="fileIn" data-i18n="d.pick">📂 Elegir PDF o imagen</label>
+  <label class="btn" for="camIn" data-i18n="d.cam">📷 Tomar foto del documento</label>
+  <p class="note" data-i18n="d.local">Todo se procesa en este teléfono; no se sube nada a internet.</p>
 </section>
 
 <div id="tools">
-  <button class="tool on" data-t="sig">✍️ Firma</button>
-  <button class="tool" data-t="text">🔤 Texto</button>
-  <button class="tool" data-t="date">📅 Fecha</button>
-  <button class="tool" data-t="move">✋ Mover</button>
+  <button class="tool on" data-t="sig" data-i18n="d.tSig">✍️ Firma</button>
+  <button class="tool" data-t="text" data-i18n="d.tText">🔤 Texto</button>
+  <button class="tool" data-t="date" data-i18n="d.tDate">📅 Fecha</button>
+  <button class="tool" data-t="move" data-i18n="d.tMove">✋ Mover</button>
 </div>
 <div id="hint"></div>
 <div id="pages"></div>
 
 <div class="bar" id="bar">
   <div class="row">
-    <button class="btn pri" id="saveBtn">📄 Guardar PDF</button>
-    <button class="btn dark" id="shareBtn">📤 Compartir / Enviar</button>
+    <button class="btn pri" id="saveBtn" data-i18n="savePdf">📄 Guardar PDF</button>
+    <button class="btn dark" id="shareBtn" data-i18n="share">📤 Compartir / Enviar</button>
   </div>
   <div class="row">
-    <button class="btn ghost" id="addPgBtn">➕ Añadir página</button>
-    <button class="btn ghost" id="newBtn">🗂️ Otro documento</button>
+    <button class="btn ghost" id="addPgBtn" data-i18n="d.addPg">➕ Añadir página</button>
+    <button class="btn ghost" id="newBtn" data-i18n="d.other">🗂️ Otro documento</button>
   </div>
 </div>
 
 <div class="modal" id="sigModal">
   <div class="sheet">
-    <h3>Firma con el dedo</h3>
+    <h3 data-i18n="d.sigTitle">Firma con el dedo</h3>
     <div id="padBox"><span class="x">✕</span><div class="line"></div><canvas id="pad"></canvas></div>
-    <div class="inks">Color:
-      <button class="ink on" data-c="#111827" style="background:#111827" aria-label="Negro"></button>
-      <button class="ink" data-c="#1d3fa8" style="background:#1d3fa8" aria-label="Azul"></button>
+    <div class="inks"><span data-i18n="d.color">Color:</span>
+      <button class="ink on" data-c="#111827" style="background:#111827" aria-label="Negro" data-i18n-aria="d.black"></button>
+      <button class="ink" data-c="#1d3fa8" style="background:#1d3fa8" aria-label="Azul" data-i18n-aria="d.blue"></button>
     </div>
     <div class="row3">
-      <button class="btn ghost" id="sigCancel">Cancelar</button>
-      <button class="btn ghost" id="sigClear">Borrar</button>
-      <button class="btn pri" id="sigOk">Colocar</button>
+      <button class="btn ghost" id="sigCancel" data-i18n="cancel">Cancelar</button>
+      <button class="btn ghost" id="sigClear" data-i18n="del">Borrar</button>
+      <button class="btn pri" id="sigOk" data-i18n="d.place">Colocar</button>
     </div>
-    <button class="btn ghost" id="sigLast" style="margin-top:8px;display:none">↩️ Usar mi última firma</button>
+    <button class="btn ghost" id="sigLast" style="margin-top:8px;display:none" data-i18n="d.last">↩️ Usar mi última firma</button>
   </div>
 </div>
 
 <div class="modal" id="txtModal">
   <div class="sheet">
     <h3 id="txtTitle">Texto</h3>
-    <input id="txtIn" type="text" autocomplete="name" placeholder="Nombre, fecha, iniciales…">
+    <input id="txtIn" type="text" autocomplete="name" placeholder="Nombre, fecha, iniciales…" data-i18n-ph="d.txtPh">
     <div class="chips" id="chips"></div>
     <div class="row">
-      <button class="btn ghost" id="txtCancel">Cancelar</button>
-      <button class="btn pri" id="txtOk">Colocar</button>
+      <button class="btn ghost" id="txtCancel" data-i18n="cancel">Cancelar</button>
+      <button class="btn pri" id="txtOk" data-i18n="d.place">Colocar</button>
     </div>
   </div>
 </div>
 
 <div class="modal" id="addModal">
   <div class="sheet">
-    <h3>Añadir página</h3>
+    <h3 data-i18n="d.addTitle">Añadir página</h3>
     <div class="row">
-      <label class="btn" for="addImgIn">🖼️ Imagen</label>
-      <label class="btn" for="addCamIn">📷 Foto</label>
+      <label class="btn" for="addImgIn" data-i18n="d.img">🖼️ Imagen</label>
+      <label class="btn" for="addCamIn" data-i18n="d.photo">📷 Foto</label>
     </div>
-    <button class="btn ghost" id="addCancel" style="margin-top:8px">Cancelar</button>
+    <button class="btn ghost" id="addCancel" style="margin-top:8px" data-i18n="cancel">Cancelar</button>
   </div>
 </div>
 
-<div class="busy" id="busy">Procesando…</div>
+<div class="busy" id="busy" data-i18n="d.busy">Procesando…</div>
 <div class="toast" id="toast"></div>
 
 <script src="lib/pdf-lib.min.js"></script>
@@ -163,6 +165,7 @@ input[type=file]{position:absolute;width:1px;height:1px;opacity:0;pointer-events
 (function(){
 'use strict';
 var $=function(id){return document.getElementById(id);};
+var T=window.I18N.t;
 var LS_SIG='dwe_doc_lastsig', LS_NAMES='dwe_doc_names';
 var pdfjsP=null;
 function pdfjs(){
@@ -176,7 +179,7 @@ var PDFJS_OPTS={cMapUrl:'./lib/pdfjs/cmaps/',cMapPacked:true,standardFontDataUrl
 var doc=null, tool='sig', sel=null, pending=null, seq=0, dirty=false;
 
 function toast(m){var t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(function(){t.classList.remove('show');},2800);}
-function busy(on,msg){$('busy').textContent=msg||'Procesando…';$('busy').classList.toggle('open',!!on);}
+function busy(on,msg){$('busy').textContent=msg||T('d.busy');$('busy').classList.toggle('open',!!on);}
 function readBytes(f){return f.arrayBuffer?f.arrayBuffer().then(function(b){return new Uint8Array(b);}):new Promise(function(res,rej){var r=new FileReader();r.onload=function(){res(new Uint8Array(r.result));};r.onerror=rej;r.readAsArrayBuffer(f);});}
 function canvasToBytes(cv,type,q){return new Promise(function(res){cv.toBlob(function(b){b.arrayBuffer().then(function(a){res(new Uint8Array(a));});},type,q);});}
 function todayStr(){var d=new Date();return String(d.getMonth()+1).padStart(2,'0')+'/'+String(d.getDate()).padStart(2,'0')+'/'+d.getFullYear();}
@@ -186,8 +189,8 @@ function isPdf(f,b){return /pdf/i.test(f.type)||/\.pdf$/i.test(f.name)||(b&&b[0]
 function resetDoc(){doc=null;sel=null;dirty=false;$('pages').innerHTML='';}
 function openFile(f){
   if(!f)return;
-  if(doc&&dirty&&!confirm('¿Descartar el documento actual y sus firmas?'))return;
-  busy(true,'Abriendo documento…');
+  if(doc&&dirty&&!confirm(T('d.discardCur')))return;
+  busy(true,T('d.opening'));
   readBytes(f).then(function(b){
     resetDoc();
     var base=(f.name||'documento').replace(/\.[^.]+$/,'')||'documento';
@@ -196,7 +199,7 @@ function openFile(f){
     return addImagePage(f);
   }).then(function(){busy(false);showDoc();})
   .catch(function(e){busy(false);console.error(e);
-    var msg=(e&&e.name==='PasswordException')?'Este PDF está protegido con contraseña y no se puede abrir.':'No se pudo abrir el archivo: '+(e&&e.message||e);
+    var msg=(e&&e.name==='PasswordException')?T('d.pwd'):T('d.openErr',{e:(e&&e.message||e)});
     toast(msg);if(!doc||!doc.pages.length){resetDoc();showStart();}});
 }
 function loadPdf(b,base){
@@ -226,7 +229,7 @@ function renderPdfPage(p){
   var ctx=cv.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,cv.width,cv.height);
   return p.pg.render({canvasContext:ctx,canvas:cv,viewport:vp}).promise.then(function(){var ph=p.el.querySelector('.ph');if(ph)ph.remove();});
 }
-function loadImg(f){return new Promise(function(res,rej){var u=URL.createObjectURL(f),im=new Image();im.onload=function(){res(im);};im.onerror=function(){URL.revokeObjectURL(u);rej(new Error('formato de imagen no compatible'));};im.src=u;});}
+function loadImg(f){return new Promise(function(res,rej){var u=URL.createObjectURL(f),im=new Image();im.onload=function(){res(im);};im.onerror=function(){URL.revokeObjectURL(u);rej(new Error(T('d.badImg')));};im.src=u;});}
 function addImagePage(f){
   return loadImg(f).then(function(im){
     var w=im.naturalWidth,h=im.naturalHeight,k=Math.min(1,2200/Math.max(w,h));
@@ -246,7 +249,7 @@ function buildPage(p){
   var lab=document.createElement('div');lab.className='plabel';w.appendChild(lab);
   var el=document.createElement('div');el.className='page';el.style.aspectRatio=p.wPt+' / '+p.hPt;
   var cv=document.createElement('canvas');el.appendChild(cv);
-  var ph=document.createElement('div');ph.className='ph';ph.textContent='Cargando página…';el.appendChild(ph);
+  var ph=document.createElement('div');ph.className='ph';ph.textContent=T('d.loadingPg');el.appendChild(ph);
   w.appendChild(el);$('pages').appendChild(w);
   p.el=el;p.cv=cv;p.wrap=w;p.lab=lab;
   el.addEventListener('click',function(e){onPageTap(p,e);});
@@ -254,33 +257,33 @@ function buildPage(p){
 }
 function relabel(){
   if(!doc)return;var tot=doc.pages.length;
-  doc.pages.forEach(function(p,i){p.lab.innerHTML='<span>Página '+(i+1)+' de '+tot+'</span>'+(doc.kind==='img'&&tot>1?'<button data-rm="'+i+'">Quitar página</button>':'');});
+  doc.pages.forEach(function(p,i){p.lab.innerHTML='<span>'+T('d.pageOf',{p:i+1,n:tot})+'</span>'+(doc.kind==='img'&&tot>1?'<button data-rm="'+i+'">'+T('d.rmPage')+'</button>':'');});
 }
 $('pages').addEventListener('click',function(e){
   var b=e.target.closest('[data-rm]');if(!b)return;e.stopPropagation();
-  var i=+b.getAttribute('data-rm');if(!confirm('¿Quitar la página '+(i+1)+'?'))return;
+  var i=+b.getAttribute('data-rm');if(!confirm(T('d.rmPageQ',{p:i+1})))return;
   var p=doc.pages.splice(i,1)[0];p.wrap.remove();relabel();dirty=true;
 });
 
-function showStart(){$('start').style.display='block';$('tools').classList.remove('on');$('bar').classList.remove('on');$('hint').style.display='none';$('sub').textContent='PDF, imagen o foto';}
+function showStart(){$('start').style.display='block';$('tools').classList.remove('on');$('bar').classList.remove('on');$('hint').style.display='none';$('sub').textContent=T('d.kinds');}
 function showDoc(){
   if(!doc||!doc.pages.length){showStart();return;}
   $('start').style.display='none';$('tools').classList.add('on');$('bar').classList.add('on');
-  $('sub').textContent=doc.name+' · '+doc.pages.length+' pág.';
+  $('sub').textContent=doc.name+' · '+T('d.pgs',{n:doc.pages.length});
   $('addPgBtn').style.display=doc.kind==='img'?'':'none';
   $('bar').querySelector('.row+.row').style.gridTemplateColumns=doc.kind==='img'?'1fr 1fr':'1fr';
   setTool(tool);
 }
 
 /* ---------- tools ---------- */
-var HINTS={sig:'Toca la página donde va la firma.',text:'Toca la página donde va el texto (nombre, iniciales…).',date:'Toca la página donde va la fecha de hoy.',move:'Toca una firma o texto para moverlo, cambiar su tamaño o borrarlo.'};
-function setTool(t){tool=t;if(t!=='move')select(null);[].forEach.call(document.querySelectorAll('.tool'),function(b){b.classList.toggle('on',b.getAttribute('data-t')===t);});var h=$('hint');h.textContent=HINTS[t];h.style.display='block';}
+var HINTS={sig:'d.hSig',text:'d.hText',date:'d.hDate',move:'d.hMove'};
+function setTool(t){tool=t;if(t!=='move')select(null);[].forEach.call(document.querySelectorAll('.tool'),function(b){b.classList.toggle('on',b.getAttribute('data-t')===t);});var h=$('hint');h.textContent=T(HINTS[t]);h.style.display='block';}
 $('tools').addEventListener('click',function(e){var b=e.target.closest('.tool');if(b)setTool(b.getAttribute('data-t'));});
 
 function onPageTap(p,e){
   if(e.target.closest('.ov'))return;
   if(sel){select(null);return;}
-  if(tool==='move'){toast('Elige ✍️ Firma, 🔤 Texto o 📅 Fecha y toca la página.');return;}
+  if(tool==='move'){toast(T('d.pickTool'));return;}
   var r=p.el.getBoundingClientRect();
   pending={p:p,fx:(e.clientX-r.left)/r.width,fy:(e.clientY-r.top)/r.height};
   if(tool==='sig')openSig();
@@ -361,7 +364,7 @@ $('sigClear').onclick=function(){strokes=[];redraw();};
 $('sigCancel').onclick=function(){closeSig();pending=null;};
 [].forEach.call(document.querySelectorAll('.ink'),function(b){b.onclick=function(){ink=b.getAttribute('data-c');[].forEach.call(document.querySelectorAll('.ink'),function(x){x.classList.toggle('on',x===b);});};});
 $('sigOk').onclick=function(){
-  if(!strokes.length){toast('Firma primero en el recuadro.');return;}
+  if(!strokes.length){toast(T('d.signFirst'));return;}
   var x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;
   strokes.forEach(function(s){s.p.forEach(function(q){x0=Math.min(x0,q[0]-s.w);y0=Math.min(y0,q[1]-s.w);x1=Math.max(x1,q[0]+s.w);y1=Math.max(y1,q[1]+s.w);});});
   var pad2=6,bw=x1-x0+pad2*2,bh=y1-y0+pad2*2,k=Math.min(3,1400/bw);
@@ -381,7 +384,7 @@ function lsSet(k,v){try{localStorage.setItem(k,v);}catch(e){}}
 
 /* ---------- text ---------- */
 function openTxt(val){
-  $('txtTitle').textContent=val!=null?'Editar texto':'Texto';
+  $('txtTitle').textContent=val!=null?T('d.editText'):T('d.text');
   var inp=$('txtIn');inp.value=val||'';
   var names=JSON.parse(lsGet(LS_NAMES)||'[]');
   var ch=[todayStr()].concat(names);
@@ -392,7 +395,7 @@ $('chips').addEventListener('click',function(e){var b=e.target.closest('.chip');
 $('txtCancel').onclick=function(){$('txtModal').classList.remove('open');pending=null;};
 $('txtIn').addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();$('txtOk').click();}});
 $('txtOk').onclick=function(){
-  var v=$('txtIn').value.trim();if(!v){toast('Escribe el texto.');return;}
+  var v=$('txtIn').value.trim();if(!v){toast(T('d.typeText'));return;}
   $('txtModal').classList.remove('open');
   if(v!==todayStr()){var names=JSON.parse(lsGet(LS_NAMES)||'[]').filter(function(n){return n!==v;});names.unshift(v);lsSet(LS_NAMES,JSON.stringify(names.slice(0,5)));}
   if(pending&&pending.edit){var o=pending.edit,ratio=o.w/o.wPx0,r=textPng(v);
@@ -424,7 +427,7 @@ function rasterPdfPage(p){
   return p.pg.render({canvasContext:ctx,canvas:cv,viewport:vp}).promise.then(function(){return canvasToBytes(cv,'image/jpeg',0.9);});
 }
 function buildOut(){
-  var L=window.PDFLib;if(!L)return Promise.reject(new Error('pdf-lib no cargó'));
+  var L=window.PDFLib;if(!L)return Promise.reject(new Error(T('d.noLib')));
   var direct=null;
   var start=(doc.kind==='pdf')?L.PDFDocument.load(doc.bytes,{updateMetadata:false}).then(function(d){
       var pg=d.getPages();if(pg.length!==doc.pages.length)throw new Error('pages');
@@ -458,24 +461,24 @@ function buildOut(){
       return out.save();
     });
   }).then(function(bytes){
-    var name=doc.name.replace(/[^\w\- .áéíóúñÁÉÍÓÚÑ]+/g,'_')+'_firmado.pdf';
+    var name=doc.name.replace(/[^\w\- .áéíóúñÁÉÍÓÚÑ]+/g,'_')+T('d.signedSfx')+'.pdf';
     return {blob:new Blob([bytes],{type:'application/pdf'}),name:name};
   });
 }
 function countOv(){return doc.pages.reduce(function(a,p){return a+p.ovs.length;},0);}
 $('saveBtn').onclick=function(){
-  if(!doc)return;if(!countOv()&&!confirm('No has añadido firmas ni texto. ¿Guardar igual?'))return;
-  select(null);busy(true,'Generando PDF…');
+  if(!doc)return;if(!countOv()&&!confirm(T('d.saveEmpty')))return;
+  select(null);busy(true,T('pdfGen'));
   buildOut().then(function(f){busy(false);
     var u=URL.createObjectURL(f.blob),a=document.createElement('a');a.href=u;a.download=f.name;document.body.appendChild(a);a.click();a.remove();
-    setTimeout(function(){URL.revokeObjectURL(u);},60000);dirty=false;toast('PDF guardado: '+f.name);
-  }).catch(function(e){busy(false);console.error(e);toast('Error al generar PDF: '+(e.message||e));});
+    setTimeout(function(){URL.revokeObjectURL(u);},60000);dirty=false;toast(T('pdfSaved',{f:f.name}));
+  }).catch(function(e){busy(false);console.error(e);toast(T('pdfErr',{e:(e.message||e)}));});
 };
-function shareSubject(){var d=new Date();return 'Hoja de firmas – '+doc.name+' – '+todayStr();}
+function shareSubject(){var d=new Date();return T('d.subject',{n:doc.name,d:todayStr()});}
 $('shareBtn').onclick=function(){
   if(!doc)return;select(null);
-  if(!window.DWShare){toast('Usa “Guardar PDF”.');return;}
-  window.DWShare.open({subject:shareSubject(),body:'Adjunto el documento firmado ('+doc.name+').',makeFile:buildOut,onDone:function(){dirty=false;}});
+  if(!window.DWShare){toast(T('d.usePdf'));return;}
+  window.DWShare.open({subject:shareSubject(),body:T('d.body',{n:doc.name}),makeFile:buildOut,onDone:function(){dirty=false;}});
 };
 
 /* ---------- inputs ---------- */
@@ -483,15 +486,15 @@ function onPick(inp,fn){inp.addEventListener('change',function(){var fs=[].slice
 onPick($('fileIn'),function(fs){openFile(fs[0]);});
 onPick($('camIn'),function(fs){openFile(fs[0]);});
 function addPages(fs){
-  $('addModal').classList.remove('open');busy(true,'Añadiendo página…');
+  $('addModal').classList.remove('open');busy(true,T('d.adding'));
   var chain=Promise.resolve();fs.forEach(function(f){chain=chain.then(function(){return addImagePage(f);});});
   chain.then(function(){busy(false);dirty=true;relabel();showDoc();doc.pages[doc.pages.length-1].wrap.scrollIntoView({behavior:'smooth'});})
-  .catch(function(e){busy(false);toast('No se pudo añadir: '+(e.message||e));});
+  .catch(function(e){busy(false);toast(T('d.addErr',{e:(e.message||e)}));});
 }
 onPick($('addImgIn'),addPages);onPick($('addCamIn'),addPages);
 $('addPgBtn').onclick=function(){$('addModal').classList.add('open');};
 $('addCancel').onclick=function(){$('addModal').classList.remove('open');};
-$('newBtn').onclick=function(){if(dirty&&!confirm('¿Descartar este documento y sus firmas?'))return;dirty=false;resetDoc();showStart();window.scrollTo(0,0);};
+$('newBtn').onclick=function(){if(dirty&&!confirm(T('d.discard')))return;dirty=false;resetDoc();showStart();window.scrollTo(0,0);};
 window.addEventListener('beforeunload',function(e){if(dirty){e.preventDefault();e.returnValue='';}});
 var rT=null,lastW=window.innerWidth;
 window.addEventListener('resize',function(){if(!doc||doc.kind!=='pdf'||Math.abs(window.innerWidth-lastW)<40)return;lastW=window.innerWidth;clearTimeout(rT);rT=setTimeout(renderAllPdf,400);});
@@ -501,6 +504,8 @@ if('serviceWorker' in navigator && location.protocol!=='file:'){
   // warm the cache for pdf.js so PDFs open offline later
   window.addEventListener('load',function(){setTimeout(function(){pdfjs().catch(function(){});},1500);});
 }
+$('langSlot').appendChild(window.I18N.button());window.I18N.apply();showStart();
+window.I18N.onChange(function(){relabel();if(doc&&doc.pages.length)showDoc();else showStart();if($('txtModal').classList.contains('open'))$('txtTitle').textContent=pending&&pending.edit?T('d.editText'):T('d.text');});
 window.DocSign={doc:function(){return doc;},openFile:openFile,buildOut:buildOut,_place:function(pi,fx,fy,kind,v){pending={p:doc.pages[pi],fx:fx,fy:fy};if(kind==='text')placeText(v);else placeSig(v.src,v.a,v.wr);}};
 })();
 </script>

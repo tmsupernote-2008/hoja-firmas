@@ -3,6 +3,7 @@
 (function(){
 'use strict';
 var LS_TO='dwe_mail_to';
+var T=function(k,p){return window.I18N?window.I18N.t(k,p):k;};
 var css='.shm{position:fixed;inset:0;background:rgba(17,24,39,.6);z-index:70;display:none;align-items:flex-end;justify-content:center}'+
 '.shm.open{display:flex}.shm .sh{background:#fff;width:100%;max-width:640px;border-radius:16px 16px 0 0;padding:14px 14px calc(14px + env(safe-area-inset-bottom));max-height:92vh;overflow:auto;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;color:#111827}'+
 '.shm h3{margin:0 0 6px;font-size:19px}.shm .st{font-size:14px;color:#374151;margin:0 0 10px;word-break:break-word}'+
@@ -12,16 +13,17 @@ var css='.shm{position:fixed;inset:0;background:rgba(17,24,39,.6);z-index:70;dis
 '.shm .warn{background:#fef3c7;border:1px solid #f59e0b;border-radius:10px;padding:9px 11px;font-size:14px;margin-top:10px;display:none}.shm .note{font-size:13px;color:#6b7280;margin-top:6px}';
 var st=document.createElement('style');st.textContent=css;document.head.appendChild(st);
 var m=document.createElement('div');m.className='shm';m.innerHTML=
-'<div class="sh" role="dialog" aria-modal="true"><h3>Compartir / Enviar PDF</h3>'+
-'<p class="st">Asunto: <b id="shSubj"></b><br>Archivo: <span id="shName">preparando…</span></p>'+
-'<button class="b pri" id="shShare" disabled>📤 Compartir PDF (Gmail, Outlook, WhatsApp…)</button>'+
-'<div class="warn" id="shWarn">Este navegador no permite compartir archivos directamente. Usa “Descargar PDF” y adjúntalo en tu correo o WhatsApp.</div>'+
-'<button class="b dark" id="shDl" disabled>⬇️ Descargar PDF</button>'+
-'<label for="shTo">Correo de destino (opcional)</label><input id="shTo" type="email" inputmode="email" autocomplete="email" placeholder="oficina@empresa.com">'+
-'<button class="b" id="shMail" disabled>✉️ Abrir correo a ese destinatario</button>'+
-'<p class="note">El correo se abre <b>sin adjunto</b>: primero se descarga el PDF y tienes que adjuntarlo tú antes de enviar. Nada se envía automáticamente.</p>'+
-'<button class="b gh" id="shClose">Cerrar</button></div>';
+'<div class="sh" role="dialog" aria-modal="true"><h3 data-i18n="sh.title">'+T('sh.title')+'</h3>'+
+'<p class="st"><span data-i18n="sh.subject">'+T('sh.subject')+'</span> <b id="shSubj"></b><br><span data-i18n="sh.file">'+T('sh.file')+'</span> <span id="shName">'+T('sh.preparing')+'</span></p>'+
+'<button class="b pri" id="shShare" disabled data-i18n="sh.shareBtn">'+T('sh.shareBtn')+'</button>'+
+'<div class="warn" id="shWarn">'+T('sh.warn')+'</div>'+
+'<button class="b dark" id="shDl" disabled data-i18n="sh.dl">'+T('sh.dl')+'</button>'+
+'<label for="shTo" data-i18n="sh.toLbl">'+T('sh.toLbl')+'</label><input id="shTo" type="email" inputmode="email" autocomplete="email" placeholder="'+T('sh.toPh')+'" data-i18n-ph="sh.toPh">'+
+'<button class="b" id="shMail" disabled data-i18n="sh.mail">'+T('sh.mail')+'</button>'+
+'<p class="note" data-i18n="sh.note">'+T('sh.note')+'</p>'+
+'<button class="b gh" id="shClose" data-i18n="close">'+T('close')+'</button></div>';
 document.body.appendChild(m);
+if(window.I18N)window.I18N.onChange(function(){window.I18N.apply(m);if(!m.classList.contains('open'))$('shWarn').textContent=T('sh.warn');});
 var $=function(id){return document.getElementById(id);};
 var cur=null,file=null,canShare=false;
 try{canShare=!!(navigator.canShare&&window.File&&navigator.canShare({files:[new File([new Uint8Array([37])],'t.pdf',{type:'application/pdf'})]}));}catch(e){}
@@ -38,24 +40,24 @@ $('shDl').onclick=function(){download();if(cur&&cur.onDone)cur.onDone();};
 $('shShare').onclick=function(){
   if(!file)return;
   var f=new File([file.blob],file.name,{type:'application/pdf'});
-  navigator.share({files:[f],title:cur.subject,text:cur.subject+'\n\n'+(cur.body||'Adjunto el PDF.')})
+  navigator.share({files:[f],title:cur.subject,text:cur.subject+'\n\n'+(cur.body||T('sh.attached'))})
     .then(function(){if(cur&&cur.onDone)cur.onDone();close();})
-    .catch(function(e){if(e&&e.name==='AbortError')return;$('shWarn').textContent='No se pudo compartir ('+(e.message||e)+'). Usa “Descargar PDF” y adjúntalo.';$('shWarn').style.display='block';});
+    .catch(function(e){if(e&&e.name==='AbortError')return;$('shWarn').textContent=T('sh.noShare',{e:(e.message||e)});$('shWarn').style.display='block';});
 };
 $('shMail').onclick=function(){
   var to=$('shTo').value.trim();
-  if(to&&!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(to.split(',')[0].trim())){alert('Revisa el correo de destino.');return;}
+  if(to&&!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(to.split(',')[0].trim())){alert(T('sh.badTo'));return;}
   download();
-  var body=(cur.body||'')+'\n\n(Adjunta aquí el PDF descargado: '+file.name+')';
+  var body=(cur.body||'')+'\n\n'+T('sh.attachHere',{f:file.name});
   var href='mailto:'+encodeURIComponent(to).replace(/%40/g,'@').replace(/%2C/g,',')+'?subject='+encodeURIComponent(cur.subject)+'&body='+encodeURIComponent(body);
   setTimeout(function(){location.href=href;},700);
 };
 /* opts: {subject, body, makeFile: ()=>Promise<{blob,name}>, onDone} */
 window.DWShare={canShareFiles:canShare,open:function(opts){
-  cur=opts;file=null;$('shSubj').textContent=opts.subject;$('shName').textContent='preparando PDF…';
+  cur=opts;file=null;$('shSubj').textContent=opts.subject;$('shWarn').textContent=T('sh.warn');$('shName').textContent=T('sh.preparingPdf');
   $('shWarn').style.display=canShare?'none':'block';$('shShare').style.display=canShare?'':'none';
   enable(false);m.classList.add('open');document.body.style.overflow='hidden';
   Promise.resolve().then(opts.makeFile).then(function(f){if(cur!==opts)return;file=f;$('shName').textContent=f.name+' ('+Math.max(1,Math.round(f.blob.size/1024))+' KB)';enable(true);})
-    .catch(function(e){$('shName').textContent='Error al generar el PDF: '+(e&&e.message||e);});
+    .catch(function(e){$('shName').textContent=T('sh.genErr',{e:(e&&e.message||e)});});
 }};
 })();

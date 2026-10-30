@@ -11,6 +11,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Firmax">
+<script src="i18n.js"></script>
 <style>
 :root{--ink:#111827;--muted:#6b7280;--bg:#f3f4f6;--acc:#c2410c;--acc2:#9a3412}
 *{box-sizing:border-box}
@@ -26,18 +27,21 @@ a.big .ic{font-size:34px;flex:none}
 a.big b{display:block;font-size:20px}
 a.big span.d{display:block;font-size:14.5px;opacity:.85;margin-top:3px}
 #installBtn{display:none;margin:10px auto 0;font:inherit;font-weight:700;padding:12px 18px;border-radius:12px;border:2px solid #9ca3af;background:#fff;color:#374151}
+.topR{position:absolute;top:calc(14px + env(safe-area-inset-top));right:14px}
+main{position:relative}
 footer{margin-top:auto;text-align:center;color:var(--muted);font-size:13px;padding-top:24px}
 </style>
 </head>
 <body>
 <main>
+  <div class="topR" id="langSlot"></div>
   <img class="logo" id="logoRot" src="icons/firmas-logo.png" alt="Firmax">
   <h1>Firmax</h1>
-  <p class="sub">Elige qué quieres hacer</p>
-  <a class="big pri" href="hoja.html"><span class="ic">📋</span><span><b>Hoja de firmas</b><span class="d">Supplemental Sign-In Sheet · Daily Pre-Task Planning</span></span></a>
-  <a class="big" href="documento.html"><span class="ic">✍️</span><span><b>Firmar otro documento</b><span class="d">Abre un PDF, imagen o foto y añade firmas, nombres y fechas</span></span></a>
-  <button id="installBtn">⬇️ Instalar app en este teléfono</button>
-  <footer>Funciona sin internet una vez abierta. Los datos se quedan en este teléfono.</footer>
+  <p class="sub" data-i18n="idx.sub">Elige qué quieres hacer</p>
+  <a class="big pri" href="hoja.html"><span class="ic">📋</span><span><b data-i18n="idx.sheet">Hoja de firmas</b><span class="d">Supplemental Sign-In Sheet · Daily Pre-Task Planning</span></span></a>
+  <a class="big" href="documento.html"><span class="ic">✍️</span><span><b data-i18n="idx.doc">Firmar otro documento</b><span class="d" data-i18n="idx.docD">Abre un PDF, imagen o foto y añade firmas, nombres y fechas</span></span></a>
+  <button id="installBtn" data-i18n="idx.install">⬇️ Instalar app en este teléfono</button>
+  <footer data-i18n="idx.footer">Funciona sin internet una vez abierta. Los datos se quedan en este teléfono.</footer>
 </main>
 <script>(function(){try{var q=location.search,done=false;
 var m=/[?&]obra=(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/.exec(q);
@@ -45,14 +49,14 @@ if(m){var la=+m[1],lo=+m[2];if(Math.abs(la)<=90&&Math.abs(lo)<=180){var d=new Da
 var ms=/[?&]sup=([^,&]+),([0-9a-f]{64})/.exec(q);
 if(ms){var nm=decodeURIComponent(ms[1]).slice(0,60),hs=ms[2],L=JSON.parse(localStorage.getItem('dwe_sups_v1')||'[]');if(!Array.isArray(L))L=[];
  L=L.filter(function(x){return x.hash!==hs&&x.name.toLowerCase()!==nm.toLowerCase();});L.push({name:nm,hash:hs});localStorage.setItem('dwe_sups_v1',JSON.stringify(L));done=true;
- setTimeout(function(){alert('Listo, '+nm+': tu acceso de superintendente quedó activado en este teléfono. En la hoja de firmas toca "Administrador" y pon tu PIN.');},300);}
+ setTimeout(function(){alert(I18N.t('lnk.supOn',{name:nm}));},300);}
 var mr=/[?&]rev=([0-9a-f]{64})/.exec(q);
 if(mr){var L2=JSON.parse(localStorage.getItem('dwe_sups_v1')||'[]');if(Array.isArray(L2)){L2=L2.filter(function(x){return x.hash!==mr[1];});localStorage.setItem('dwe_sups_v1',JSON.stringify(L2));}
  try{var ad=JSON.parse(localStorage.getItem('dwe_admin_v1')||'null');if(ad&&ad.lvl==='sup')localStorage.removeItem('dwe_admin_v1');}catch(e){}done=true;
- setTimeout(function(){alert('Tu acceso de superintendente fue revocado en este teléfono.');},300);}
+ setTimeout(function(){alert(I18N.t('lnk.supRev'));},300);}
 var mb=/[?&]subl=([A-Za-z0-9_-]+)/.exec(q);
 if(mb){try{var o=JSON.parse(decodeURIComponent(escape(atob(mb[1].replace(/-/g,'+').replace(/_/g,'/')))));
- if(localStorage.getItem('dwe_admin_v1')){setTimeout(function(){alert('Eres administrador en este teléfono: el enlace de sub no se aplicó.');},300);}
+ if(localStorage.getItem('dwe_admin_v1')){setTimeout(function(){alert(I18N.t('lnk.subAdmin'));},300);}
  else if(o&&o.s&&typeof o.la==='number'&&typeof o.lo==='number'&&Math.abs(o.la)<=90&&Math.abs(o.lo)<=180){
   var d2=new Date();localStorage.setItem('dwe_geofence_v1',JSON.stringify({lat:o.la,lon:o.lo,acc:0,locked:true,when:'enlace '+(d2.getMonth()+1)+'/'+d2.getDate()}));
   localStorage.setItem('dwe_subcfg_v1',JSON.stringify({s:String(o.s).slice(0,60),ph:o.ph===0?0:1,lock:o.lk===0?0:1,ex:+o.ex||0}));
@@ -61,10 +65,11 @@ if(mb){try{var o=JSON.parse(decodeURIComponent(escape(atob(mb[1].replace(/-/g,'+
   mem.project=String(o.p||'').slice(0,120);mem.location=String(o.l||'').slice(0,120);mem.prepared=String(o.pr||'').slice(0,80);mem.supervisor=String(o.sv||'').slice(0,80);
   localStorage.setItem('dwe_hdr_mem_v1',JSON.stringify(mem));
   if(Array.isArray(o.n)){var ls={};try{ls=JSON.parse(localStorage.getItem('dwe_name_lists_v1')||'{}')||{};}catch(e){}ls[String(o.s)]=o.n.slice(0,60).map(function(x){return String(x).slice(0,60);});localStorage.setItem('dwe_name_lists_v1',JSON.stringify(ls));}
-  done=true;setTimeout(function(){alert('Listo: Firmax quedó configurada para '+o.s+'. Firma solo cerca de la obra.');},300);}
+  done=true;setTimeout(function(){alert(I18N.t('lnk.subOk',{sub:o.s}));},300);}
  }catch(e){}}
 if(done&&history.replaceState)history.replaceState(null,'',location.pathname);}catch(e){}})();</script>
 <script>
+document.getElementById('langSlot').appendChild(I18N.button());I18N.apply();
 (function(){var d=new Date(),n=Math.floor(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())/864e5)%6;document.getElementById('logoRot').src='icons/rot/'+n+'.png';})();
 if('serviceWorker' in navigator && location.protocol!=='file:'){
   window.addEventListener('load',function(){navigator.serviceWorker.register('./sw.js',{scope:'./'}).catch(function(e){console.warn('SW',e);});});
