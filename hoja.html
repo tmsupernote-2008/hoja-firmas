@@ -6,6 +6,7 @@
 <meta name="theme-color" content="#1f2937">
 <link rel="manifest" href="manifest.webmanifest">
 <script src="i18n.js"></script>
+<script src="cifrado.js"></script>
 <style>.hdrR{margin-left:auto;align-self:flex-start;flex:none;display:flex;flex-direction:column;align-items:flex-end;gap:6px}.homeLink{flex:none;font-weight:700;font-size:15px;color:#111827;text-decoration:none;border:2px solid #111827;border-radius:10px;padding:6px 10px;background:#fff}</style>
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -280,10 +281,15 @@ if(mb){try{var o=JSON.parse(decodeURIComponent(escape(atob(mb[1].replace(/-/g,'+
   var d2=new Date();localStorage.setItem('dwe_geofence_v1',JSON.stringify({lat:o.la,lon:o.lo,acc:0,locked:true,when:'enlace '+(d2.getMonth()+1)+'/'+d2.getDate()}));
   localStorage.setItem('dwe_subcfg_v1',JSON.stringify({s:String(o.s).slice(0,60),ph:o.ph===0?0:1,lock:o.lk===0?0:1,ex:+o.ex||0}));
   localStorage.setItem('dwe_last_sub_v1',JSON.stringify(String(o.s)));
-  var mem={};try{mem=JSON.parse(localStorage.getItem('dwe_hdr_mem_v1')||'{}')||{};}catch(e){}
+  var enc=!!localStorage.getItem('dwe_crypto_v1'),pd={};/* cifrado activo: se guarda aparte y se cifra al desbloquear */
+  if(enc){try{pd=JSON.parse(localStorage.getItem('dwe_link_pending_v1')||'{}')||{};}catch(e){}}
+  var mem={};if(!enc){try{mem=JSON.parse(localStorage.getItem('dwe_hdr_mem_v1')||'{}')||{};}catch(e){}}
   mem.project=String(o.p||'').slice(0,120);mem.location=String(o.l||'').slice(0,120);mem.prepared=String(o.pr||'').slice(0,80);mem.supervisor=String(o.sv||'').slice(0,80);
-  localStorage.setItem('dwe_hdr_mem_v1',JSON.stringify(mem));
-  if(Array.isArray(o.n)){var ls={};try{ls=JSON.parse(localStorage.getItem('dwe_name_lists_v1')||'{}')||{};}catch(e){}ls[String(o.s)]=o.n.slice(0,60).map(function(x){return String(x).slice(0,60);});localStorage.setItem('dwe_name_lists_v1',JSON.stringify(ls));}
+  if(enc)pd.mem=mem;else localStorage.setItem('dwe_hdr_mem_v1',JSON.stringify(mem));
+  if(Array.isArray(o.n)){var nl=o.n.slice(0,60).map(function(x){return String(x).slice(0,60);});
+   if(enc){pd.lists=pd.lists||{};pd.lists[String(o.s)]=nl;}
+   else{var ls={};try{ls=JSON.parse(localStorage.getItem('dwe_name_lists_v1')||'{}')||{};}catch(e){}ls[String(o.s)]=nl;localStorage.setItem('dwe_name_lists_v1',JSON.stringify(ls));}}
+  if(enc)localStorage.setItem('dwe_link_pending_v1',JSON.stringify(pd));
   done=true;setTimeout(function(){alert(I18N.t('lnk.subOk',{sub:o.s}));},300);}
  }catch(e){}}
 if(done&&history.replaceState)history.replaceState(null,'',location.pathname);}catch(e){}})();</script>
@@ -306,8 +312,8 @@ var MEMF=['project','location','prepared','supervisor','task'];
 var K_MEM='dwe_hdr_mem_v1',K_HIST='dwe_hdr_hist_v1',K_SUB='dwe_last_sub_v1',K_LISTS='dwe_name_lists_v1',K_ROLES='dwe_roles_v1';
 var DEFAULT_ROLES=['Hanger','Finisher','Caulking','Framer'];
 function getRoles(){var r=lsGetJ(K_ROLES,null);if(!Array.isArray(r)){r=DEFAULT_ROLES.slice();lsSetJ(K_ROLES,r);}return r;}
-function lsGetJ(k,d){try{var v=JSON.parse(localStorage.getItem(k));return v==null?d:v;}catch(e){return d;}}
-function lsSetJ(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
+function lsGetJ(k,d){try{var v=JSON.parse(FXV.get(k));return v==null?d:v;}catch(e){return d;}}
+function lsSetJ(k,v){try{FXV.set(k,JSON.stringify(v));}catch(e){}}
 function getLists(){
   var l=lsGetJ(K_LISTS,null);
   if(!l||typeof l!=='object'){l={};SUBS.forEach(function(s){l[s]=DEFAULT_NAMES[s].slice();});lsSetJ(K_LISTS,l);}
@@ -333,7 +339,7 @@ function load(){
   lsOK=lsTest();
   if(!lsOK){$('lsWarn').style.display='block';return;}
   try{
-    var s=JSON.parse(localStorage.getItem(KEY)||'null');
+    var s=JSON.parse(FXV.get(KEY)||'null');
     if(s&&s.h){
       HDR.forEach(function(k){if(typeof s.h[k]==='string')state.h[k]=s.h[k];});
       if(typeof s.notes==='string')state.notes=s.notes;
@@ -359,9 +365,9 @@ var saveT=null;
 function save(){clearTimeout(saveT);saveT=setTimeout(saveNow,300);}
 function saveNow(){
   if(!lsOK)return;
-  try{localStorage.setItem(KEY,JSON.stringify(state));}
+  try{FXV.set(KEY,JSON.stringify(state));}
   catch(e){ // quota: at least keep header
-    try{localStorage.setItem(KEY,JSON.stringify({h:state.h,dateSetOn:state.dateSetOn,notes:state.notes,rows:state.rows.map(function(r){return {name:r.name,sub:r.sub,role:r.role,time:r.time,out:r.out,sig:'',sigV:null};})}));}catch(e2){}
+    try{FXV.set(KEY,JSON.stringify({h:state.h,dateSetOn:state.dateSetOn,notes:state.notes,rows:state.rows.map(function(r){return {name:r.name,sub:r.sub,role:r.role,time:r.time,out:r.out,sig:'',sigV:null};})}));}catch(e2){}
     toast(T('t.memFull'));
   }
 }
@@ -981,10 +987,11 @@ $('prevBtn').onclick=function(){
 };
 $('prevClose').onclick=function(){$('prevModal').classList.remove('open');document.body.style.overflow='';$('prevBody').innerHTML='';};
 
-/* init */
-load();bindHeader();renderRows();
+/* init (con cifrado activo, después de desbloquear) */
+FXV.ready(function(){load();bindHeader();renderRows();});
+FXV.onBeforeLock(saveNow);FXV.onWriteError=function(){toast(T('t.memFull'));};
 /* idioma: botón 🌐 y re-render en vivo */
-$('langSlot').appendChild(window.I18N.button());window.I18N.apply();admUI();geoStatus();
+$('langSlot').appendChild(window.I18N.button());$('langSlot').appendChild(FXV.lockButton());window.I18N.apply();admUI();geoStatus();
 window.I18N.onChange(function(){
   if($('pickModal').classList.contains('open'))closePick();
   if($('editModal').classList.contains('open')){$('editModal').classList.remove('open');document.body.style.overflow='';edReturn=-1;}

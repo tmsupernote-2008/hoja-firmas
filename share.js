@@ -27,8 +27,9 @@ if(window.I18N)window.I18N.onChange(function(){window.I18N.apply(m);if(!m.classL
 var $=function(id){return document.getElementById(id);};
 var cur=null,file=null,canShare=false;
 try{canShare=!!(navigator.canShare&&window.File&&navigator.canShare({files:[new File([new Uint8Array([37])],'t.pdf',{type:'application/pdf'})]}));}catch(e){}
-try{$('shTo').value=localStorage.getItem(LS_TO)||'';}catch(e){}
-$('shTo').addEventListener('input',function(){try{localStorage.setItem(LS_TO,$('shTo').value.trim());}catch(e){}});
+var ST=window.FXV||{get:function(k){return localStorage.getItem(k);},set:function(k,v){localStorage.setItem(k,v);},ready:function(f){f();}}; /* cifrado.js (opcional) */
+ST.ready(function(){try{$('shTo').value=ST.get(LS_TO)||'';}catch(e){}});
+$('shTo').addEventListener('input',function(){try{ST.set(LS_TO,$('shTo').value.trim());}catch(e){}});
 function close(){m.classList.remove('open');document.body.style.overflow='';file=null;}
 $('shClose').onclick=close;m.addEventListener('click',function(e){if(e.target===m)close();});
 function enable(on){['shShare','shDl','shMail'].forEach(function(id){$(id).disabled=!on;});if(!canShare)$('shShare').disabled=true;}

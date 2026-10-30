@@ -1,5 +1,5 @@
 /* Service worker – Firmas Drywall Enterprise (offline) */
-const CACHE = 'firmax-v20';
+const CACHE = 'firmax-v21';
 // Imprescindibles: si falla alguno, la instalación falla
 const CORE = [
  "./",
@@ -8,6 +8,7 @@ const CORE = [
  "./documento.html",
  "./share.js",
  "./i18n.js",
+ "./cifrado.js",
  "./manifest.webmanifest",
  "./icons/icon-192.png",
  "./icons/icon-512.png",
@@ -74,4 +75,22 @@ self.addEventListener('fetch', e => {
     if (res.ok) { const cp = res.clone(); caches.open(CACHE).then(c => c.put(req, cp)); }
     return res;
   })));
+});
+// Cifrado opcional: al tocar un enlace interno, la página pasa la clave de la sesión a la página siguiente
+// a través de la MEMORIA de este worker (nunca en disco): caduca a los 10 s y se entrega una sola vez.
+let fxHeld = null;
+self.addEventListener('message', e => {
+  const d = e.data || {};
+  if (!d.fx) return;
+  const src = e.source && e.source.url;
+  if (!src || !src.startsWith(self.registration.scope)) return; // solo páginas de Firmax
+  const now = Date.now();
+  if (fxHeld && fxHeld.exp < now) fxHeld = null;
+  if (d.fx === 'put' && d.key) fxHeld = {key: d.key, id: d.id, exp: now + Math.min(d.ttl || 10000, 10000)};
+  else if (d.fx === 'forget') fxHeld = null;
+  else if (d.fx === 'get' && e.ports && e.ports[0]) {
+    const k = fxHeld && fxHeld.id === d.id ? fxHeld.key : null;
+    fxHeld = null; // un solo uso
+    e.ports[0].postMessage({key: k});
+  }
 });

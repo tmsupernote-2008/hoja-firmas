@@ -7,6 +7,7 @@
 <title>Firmax – Documento</title>
 <link rel="manifest" href="manifest.webmanifest">
 <script src="i18n.js"></script>
+<script src="cifrado.js"></script>
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <meta name="mobile-web-app-capable" content="yes">
@@ -379,8 +380,8 @@ function placeSig(url,aspect,wr){
   var wPt=Math.max(80,Math.min(p.wPt*0.38,200*(wr||1)));
   addOverlay(url,aspect,wPt,'sig');
 }
-function lsGet(k){try{return localStorage.getItem(k);}catch(e){return null;}}
-function lsSet(k,v){try{localStorage.setItem(k,v);}catch(e){}}
+function lsGet(k){try{return FXV.get(k);}catch(e){return null;}}
+function lsSet(k,v){try{FXV.set(k,v);}catch(e){}}
 
 /* ---------- text ---------- */
 function openTxt(val){
@@ -504,7 +505,9 @@ if('serviceWorker' in navigator && location.protocol!=='file:'){
   // warm the cache for pdf.js so PDFs open offline later
   window.addEventListener('load',function(){setTimeout(function(){pdfjs().catch(function(){});},1500);});
 }
-$('langSlot').appendChild(window.I18N.button());window.I18N.apply();showStart();
+$('langSlot').style.display='flex';$('langSlot').style.gap='6px';$('langSlot').appendChild(window.I18N.button());$('langSlot').appendChild(FXV.lockButton());window.I18N.apply();showStart();
+/* cifrado: con un documento abierto, el bloqueo tapa la pantalla sin recargar (el documento no se guarda en el teléfono) */
+FXV.keepOnLock=function(){return !!doc;};
 window.I18N.onChange(function(){relabel();if(doc&&doc.pages.length)showDoc();else showStart();if($('txtModal').classList.contains('open'))$('txtTitle').textContent=pending&&pending.edit?T('d.editText'):T('d.text');});
 window.DocSign={doc:function(){return doc;},openFile:openFile,buildOut:buildOut,_place:function(pi,fx,fy,kind,v){pending={p:doc.pages[pi],fx:fx,fy:fy};if(kind==='text')placeText(v);else placeSig(v.src,v.a,v.wr);}};
 })();
